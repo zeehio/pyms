@@ -45,6 +45,8 @@ def export_csv(data, root_name):
     @author: Milica Ng
     """
 
+## andrew: check data is GCMS object
+
     if not is_str(root_name):
         error("'root_name' is not a string")
 
@@ -79,6 +81,8 @@ def export_leco_csv(data, file_name):
     @author: Vladimir Likic
     """
 
+## andrew: check data is GCMS object
+
     if not is_str(file_name):
         error("'file_name' is not a string")
 
@@ -103,7 +107,7 @@ def export_leco_csv(data, file_name):
             fp.write(",\"%d\"" % int(ii))
         else:
             error("mass list datum not a number")
-    fp.write("\r\n")
+    fp.write("\r\n")  # windows CR/LF
 
     # write lines
     for ii in range(len(time_list)):
