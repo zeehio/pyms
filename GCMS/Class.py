@@ -70,8 +70,6 @@ class GCMS_data(object):
 
         self.__calc_tic()
 
-        self.__intensity_matrix = None
-
     def __set_min_max_mass(self):
 
         """
@@ -93,99 +91,6 @@ class GCMS_data(object):
                 maxi = tmp_maxi
         self.__min_mass = mini
         self.__max_mass = maxi
-
-    def build_intensity_matrix(self, bin_size = 1):
-
-        """
-        @summary: Sets the full intensity matrix with flexible bins
-
-        @param bin_size: bin size
-        @type bin_size: IntType or FloatType
-
-        @author: Qiao Wang
-        @author: Andrew Isaac
-        @author: Vladimir Likic
-        """
-
-        if bin_size <= 0:
-            error("The bin size must be larger than zero.")
-        self.__fill_bins(self.__min_mass, self.__max_mass, bin_size)
-
-    def build_intensity_matrix_i(self):
-
-        """
-        @summary: Sets the full intensity matrix with integer bins
-
-        @author: Qiao Wang
-        @author: Andrew Isaac
-        @author: Vladimir Likic
-        """
-
-        min_mass = int(round(self.__min_mass))
-        max_mass = int(round(self.__max_mass))
-        self.__fill_bins(min_mass, max_mass, 1)
-
-    def __fill_bins(self, min_mass, max_mass, bin_size):
-
-        """
-        @summary: Fills the intensity values for all bins
-
-        @param min_mass: minimum mass value
-        @type min_mass: IntType or FloatType
-        @param max_mass: maximum mass value
-        @type max_mass: IntType or FloatType
-        @param bin_size: bin size
-        @type bin_size: IntType or FloatType
-
-        @author: Qiao Wang
-        @author: Andrew Isaac
-        @author: Vladimir Likic
-        """
-
-        if not is_number(min_mass):
-            error("'min_mass' must be a number")
-        if not is_number(max_mass):
-            error("'max_mass' must be a number")
-        if not is_number(bin_size):
-            error("'bin_size' must be a number")
-
-        # calculate how many bins based on the mass range and bin size
-        # round to ensure max mass is included correctly
-        num_bins = int(round(float(max_mass - min_mass) / bin_size)) + 1
-
-#        print "Num of bins is:", num_bins
-
-        # initialise masses to bin centres
-        mass_list = [i * bin_size + min_mass for i in range(num_bins)]
-
-        # fill the bins
-        intensity_matrix = []
-        for scan in self.__scan_list:
-            intensitylist = [0.0] * num_bins
-            masses = scan.get_masses()
-            intensities = scan.get_intensities()
-            for i in range(len(scan)):
-                index = int(round(float(masses[i] - min_mass) / bin_size))
-                intensitylist[index] += intensities[i]
-            intensity_matrix.append(intensitylist)
-
-        self.__intesity_matrix = \
-            IntensityMatrix(time_list, mass_list, intensity_matrix)
-
-    def get_intensity_matrix(self):
-
-        """
-        @summary: Return the full intensity matrix
-
-        @return: Full intensity matrix
-        @rtype: pyms.GCMS.IntensityMatrix
-
-        @author: Qiao Wang
-        @author: Andrew Isaac
-        @author: Vladimir Likic
-        """
-
-        return copy.deepcopy(self.__intensity_matrix)
 
     def get_min_mass(self):
 
@@ -455,10 +360,10 @@ class IntensityMatrix(object):
             error("'time_list' must be a list of numbers")
         if not is_list(mass_list) or not is_number(mass_list[0]):
             error("'mass_list' must be a list of numbers")
-        if not is_list(intensity_list) or \
-           not is_list(intensity_list[0]) or \
-           not is_number(intensity_list[0][0]):
-            error("'intensity_list' must be a list, of a list, of numbers")
+        if not is_list(intensity_matrix) or \
+           not is_list(intensity_matrix[0]) or \
+           not is_number(intensity_matrix[0][0]):
+            error("'intensity_matrix' must be a list, of a list, of numbers")
         if not len(time_list) == len(intensity_matrix):
             error("'time_list' is not the same length as 'intensity_matrix'")
         if not len(mass_list) == len(intensity_matrix[0]):
@@ -520,25 +425,6 @@ class IntensityMatrix(object):
         rt = copy.deepcopy(self.__time_list)
 
         return IonChromatogram(ia, rt, mass)
-
-    def get_tic(self):
-        """
-        @summary: Returns the total ion chromatogram
-            Calculated on each call
-
-        @return: Total ion chromatogram
-        @rtype: pyms.GCMS.IonChromatogram
-
-        @author: Andrew Isaac
-        """
-
-        intensities = []
-        for ms in self.__intensity_matrix:
-            intensities.append(sum(ms))
-        ia = numpy.array(intensities)
-        rt = copy.deepcopy(self.__time_list)
-
-        return IonChromatogram(ia, rt)
 
     def get_ic_at_mass(self, mass = None):
 
@@ -679,12 +565,14 @@ class IntensityMatrix(object):
 
         best = self.__max_mass
         index = 0
-        for i in len(self.__mass_list):
+        for i in range(len(self.__mass_list)):
             tmp = abs(self.__mass_list[i] - mass)
             if tmp < best:
                 best = tmp
                 index = i
         return index
+
+## TODO: return IM as list of lists?
 
 class IonChromatogram(object):
 

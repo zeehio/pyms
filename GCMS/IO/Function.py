@@ -27,7 +27,7 @@ from pyms.Utils.Utils import is_number, is_str, is_array, is_list, is_int
 from pyms.Utils.IO import open_for_writing, close_for_writing
 from pyms.Utils.IO import save_data
 
-def export_csv(data, root_name):
+def export_csv(data, im, root_name):
 
     """
     @summary: Exports data to the CSV format
@@ -35,6 +35,12 @@ def export_csv(data, root_name):
     Calling export_csv("NAME") will create NAME.im.csv, NAME.rt.csv,
     and NAME.mz.csv where these are the intensity matrix, retention
     time vector, and m/z vector.
+
+    @param data: the GCMS_data
+    @type data: pyms.GCMS.GCMS_data
+
+    @param im: the binned IntensityMatrix
+    @type im: pyms.GCMS.IntensityMatrix
 
     @param root_name: Root name for the output files
     @type root_name: StringType
@@ -45,14 +51,17 @@ def export_csv(data, root_name):
     @author: Milica Ng
     """
 
-## andrew: check data is GCMS object
-
+    if not isinstance(GCMS_data):
+        error("'data' must be a GCMS_data object")
+    if not isinstance(IntensityMatrix):
+        error("'im' must be a GCMS_data object")
     if not is_str(root_name):
         error("'root_name' is not a string")
 
     # export 2D matrix of intensities into CSV format
-    im = data.get_intensity_matrix()
     save_data(root_name+'.im.csv', im, sep=",")
+
+##TODO need to add export to list for im
 
     # export 1D vector of m/z's, corresponding to rows of
     # the intensity matrix, into CSV format
