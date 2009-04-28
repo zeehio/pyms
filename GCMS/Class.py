@@ -637,8 +637,10 @@ class IonChromatogram(object):
 
         if not isinstance(ia, numpy.ndarray):
             error("'ia' must be a numpy array")
+
         if not is_list(time_list) or not is_number(time_list[0]):
             error("'time_list' must be a list of numbers")
+
         if len(ia) != len(time_list):
             error("Intensity array and time list differ in length")
 
