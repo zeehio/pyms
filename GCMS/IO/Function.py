@@ -26,8 +26,9 @@ from pyms.Utils.Error import error
 from pyms.Utils.Utils import is_number, is_str, is_array, is_list, is_int
 from pyms.Utils.IO import open_for_writing, close_for_writing
 from pyms.Utils.IO import save_data
+from pyms.GCMS.Class import IntensityMatrix
 
-def export_csv(data, im, root_name):
+def export_csv(root_name, im):
 
     """
     @summary: Exports data to the CSV format
@@ -36,52 +37,48 @@ def export_csv(data, im, root_name):
     and NAME.mz.csv where these are the intensity matrix, retention
     time vector, and m/z vector.
 
-    @param data: the GCMS_data
-    @type data: pyms.GCMS.GCMS_data
+    @param root_name: Root name for the output files
+    @type root_name: StringType
 
     @param im: the binned IntensityMatrix
     @type im: pyms.GCMS.IntensityMatrix
-
-    @param root_name: Root name for the output files
-    @type root_name: StringType
 
     @return: none
     @rtype: NoneType
 
     @author: Milica Ng
+    @author: Andrew Isaac
     """
 
-    if not isinstance(GCMS_data):
-        error("'data' must be a GCMS_data object")
-    if not isinstance(IntensityMatrix):
-        error("'im' must be a GCMS_data object")
     if not is_str(root_name):
         error("'root_name' is not a string")
+    if not isinstance(im, IntensityMatrix):
+        error("'im' must be a IntensityMatrix object")
 
     # export 2D matrix of intensities into CSV format
-    save_data(root_name+'.im.csv', im, sep=",")
-
-##TODO need to add export to list for im
+    vals = im.get_matrix_list()
+    save_data(root_name+'.im.csv', vals, sep=",")
 
     # export 1D vector of m/z's, corresponding to rows of
     # the intensity matrix, into CSV format
-    mass_list = data.get_mass_list()
+    mass_list = im.get_mass_list()
     save_data(root_name+'.mz.csv', mass_list, sep=",")
 
     # export 1D vector of retention times, corresponding to
     # columns of the intensity matrix, into CSV format
-    time_list = data.get_time_list()
+    time_list = im.get_time_list()
     save_data(root_name+'.rt.csv', time_list, sep=",")
 
-def export_leco_csv(data, file_name):
+def export_leco_csv(file_name, im):
 
     """
     @summary: Exports data in LECO CSV format
 
-    @param data: Intensity matrix
-    @type data: numpy.ndarray
     @param file_name: File name
     @type file_name: StringType
+
+    @param im: the binned IntensityMatrix
+    @type im: pyms.GCMS.IntensityMatrix
 
     @return: none
     @rtype: NoneType
@@ -90,14 +87,14 @@ def export_leco_csv(data, file_name):
     @author: Vladimir Likic
     """
 
-## andrew: check data is GCMS object
-
     if not is_str(file_name):
         error("'file_name' is not a string")
+    if not isinstance(im, IntensityMatrix):
+        error("'im' must be a IntensityMatrix object")
 
-    im = data.get_intensity_matrix()
-    mass_list = data.get_mass_list()
-    time_list = data.get_time_list()
+    mass_list = im.get_mass_list()
+    time_list = im.get_time_list()
+    vals = im.get_matrix_list()
 
     fp = open_for_writing(file_name)
 
@@ -121,9 +118,9 @@ def export_leco_csv(data, file_name):
     # write lines
     for ii in range(len(time_list)):
         fp.write("%s,%#.6e" % (ii, time_list[ii]))
-        for jj in range(len(im[ii])):
-            if is_number(im[ii][jj]):
-                fp.write(",%#.6e" % (im[ii][jj]))
+        for jj in range(len(vals[ii])):
+            if is_number(vals[ii][jj]):
+                fp.write(",%#.6e" % (vals[ii][jj]))
             else:
                 error("datum not a number")
         fp.write("\r\n")

@@ -572,7 +572,35 @@ class IntensityMatrix(object):
                 index = i
         return index
 
-## TODO: return IM as list of lists?
+    def get_matrix_list(self):
+
+        """
+        @summary: Returns a copy of the intensity matrix as a
+            list of lists of floats
+
+        @return: Matrix of intensity values
+        @rtype: ListType
+
+        @author: Andrew Isaac
+        """
+
+        return copy.deepcopy(self.__intensity_matrix)
+
+    def get_time_list(self):
+
+        """
+        @summary: Returns a copy of the time list
+
+        @return: List of retention times
+        @rtype: ListType
+
+        @author: Andrew Isaac
+        """
+
+        return copy.deepcopy(self.__time_list)
+
+##TODO: ???
+## get_ms_at_time()
 
 class IonChromatogram(object):
 
