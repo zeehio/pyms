@@ -599,6 +599,43 @@ class IntensityMatrix(object):
 
         return copy.deepcopy(self.__time_list)
 
+    def get_index_at_time(self, time):
+
+        """
+        @summary: Returns the nearest index corresponding to the given time
+
+        @param time: Time in seconds
+        @type time: FloatType
+
+        @return: Nearest index corresponding to given time
+        @rtype: IntType
+
+        @author: Lewis Lee
+        @author: Tim Erwin
+        @author: Vladimir Likic
+        """
+
+        if not is_number(time):
+            error("'time' must be a number")
+
+        if time < min(self.__time_list) or time > max(self.__time_list):
+            error("time %.2f is out of bounds (min: %.2f, max: %.2f)" %
+                  (time, self.__min_rt, self.__max_rt))
+
+        time_list = self.__time_list
+        time_diff_min = max(self.__time_list)
+        ix_match = None
+
+        for ix in range(len(time_list)):
+
+            time_diff = math.fabs(time-time_list[ix])
+
+            if time_diff < time_diff_min:
+                ix_match = ix
+                time_diff_min = time_diff
+
+        return ix_match
+
 ##TODO: ???
 ## get_ms_at_time()
 
