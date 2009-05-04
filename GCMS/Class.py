@@ -25,6 +25,7 @@ Classes to model GC-MS data
 import numpy
 import math
 import copy
+import operator
 
 from pyms.Utils.Error import error
 from pyms.Utils.Utils import is_str, is_int, is_array, is_list, is_number
@@ -416,7 +417,6 @@ class IntensityMatrix(object):
             ia = []
             for i in range(len(self.__intensity_matrix)):
                 ia.append(self.__intensity_matrix[i][index])
-
         except IndexError:
             error("index out of bounds.")
 
@@ -636,7 +636,72 @@ class IntensityMatrix(object):
 
         return ix_match
 
-##TODO: ???
+
+    def reduce_mass_spectra(self, limit=5, min_mass_diff=1.5):
+
+        """
+        """
+
+        mass_list = self.__mass_list
+
+        # loop over all mass spectral scans
+        for ii in range(len(self.__intensity_matrix)):
+
+            # get next mass spectrum
+            intensity_list = self.__intensity_matrix[ii]
+
+            # sort mass spectrum intensities
+            tmp_list = sorted(enumerate(intensity_list), key=operator.itemgetter(1))
+            tmp_list.reverse()
+
+            # a sorted list of indices and associated dictionary of intensities
+            index_list = []
+            intensity_dict = {}
+            mass_dict = {}
+            for item in tmp_list:
+                ix = item[0]
+                index_list.append(ix)
+                intensity_dict[ix] = intensity_list[ix]
+                mass_dict[ix] = mass_list[ix]
+
+            # limit to first 'limit' intensities
+            top_index_list = []            
+
+            cntr = 0
+
+            while len(top_index_list) < limit:
+
+                ix_crnt = index_list[cntr]
+                ix_crnt_mass  = mass_dict[ix_crnt]
+
+                mass_ok = True
+
+                for ix in top_index_list:
+                   ix_mass = mass_dict[ix] 
+                   if math.fabs(ix_crnt_mass - ix_mass) < min_mass_diff:
+                       mass_ok = False
+ 
+                if mass_ok:
+                    top_index_list.append(ix_crnt)
+
+                cntr = cntr + 1
+
+            #for ix in top_index_list:
+            #    print ix, mass_dict[ix], intensity_dict[ix]
+            #raise RuntimeError
+
+            # build a cleaned up mass spectrum
+            N = len(intensity_list)
+            intensity_list2 = []
+
+            for jj in range(N):
+                if jj in top_index_list:
+                    intensity_list2.append(intensity_dict[jj])
+                else:
+                    intensity_list2.append(0.0)
+
+            self.__intensity_matrix[ii] = intensity_list2
+ 
 ## get_ms_at_time()
 
 class IonChromatogram(object):
@@ -917,3 +982,4 @@ class MassSpectrum(object):
         """
 
         return len(self.mass_list)
+
