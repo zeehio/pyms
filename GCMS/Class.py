@@ -224,6 +224,30 @@ class GCMS_data(object):
 
         self.__tic = tic
 
+    def write_intensities(self, file_name):
+
+        """
+        @summary: Writes all intensities to a file
+
+        This function loop over all scans, and for each
+        scan writes intensities to the file, one intenisity
+        per line. Intensities from different scans are
+        joined without any delimiters.
+
+        @author: Vladimir Likic
+        """
+
+        if not is_str(file_name):
+            error("'file_name' must be a string")
+
+        fp = open_for_writing(file_name)
+
+        for scan in self.__scan_list:
+            intensities = scan.get_intensity_list()
+            for I in intensities:
+                fp.write("%8.4f\n" % (I))
+
+        close_for_writing(fp)
 
 class Scan(object):
 
@@ -636,13 +660,26 @@ class IntensityMatrix(object):
 
         return ix_match
 
-
-    def reduce_mass_spectra(self, limit=5, min_mass_diff=1.5):
+    def reduce_mass_spectra(self, N=5, min_mz_diff=1.5):
 
         """
-        """
+        @summary: Reduces mass spectra by retaining top N
+        intensities, and discarding all other intensities.
 
-        mass_list = self.__mass_list
+        @param N: The number of top intensities to keep
+        @type N: IntType
+        @param min_mz_diff: The minimum difference in m/z
+            required to keep the intensity. For example,
+            if two m/z values with greater intensity are
+            77.0 and 78.0, and min_mz_diff=1.5, the intensity
+            for for m/z=77 will be discarded.
+        @type min_mz_diff: FloatType
+
+        @return: Does not return a value, changes the variable
+            self.__intensity_matrix
+
+        @author: Vladimir Likic
+        """
 
         # loop over all mass spectral scans
         for ii in range(len(self.__intensity_matrix)):
@@ -662,14 +699,14 @@ class IntensityMatrix(object):
                 ix = item[0]
                 index_list.append(ix)
                 intensity_dict[ix] = intensity_list[ix]
-                mass_dict[ix] = mass_list[ix]
+                mass_dict[ix] = self.__mass_list[ix]
 
-            # limit to first 'limit' intensities
+            # limit to first N intensities
             top_index_list = []            
 
             cntr = 0
 
-            while len(top_index_list) < limit:
+            while len(top_index_list) < N:
 
                 ix_crnt = index_list[cntr]
                 ix_crnt_mass  = mass_dict[ix_crnt]
@@ -678,7 +715,7 @@ class IntensityMatrix(object):
 
                 for ix in top_index_list:
                    ix_mass = mass_dict[ix] 
-                   if math.fabs(ix_crnt_mass - ix_mass) < min_mass_diff:
+                   if math.fabs(ix_crnt_mass - ix_mass) < min_mz_diff:
                        mass_ok = False
  
                 if mass_ok:
@@ -686,21 +723,17 @@ class IntensityMatrix(object):
 
                 cntr = cntr + 1
 
-            #for ix in top_index_list:
-            #    print ix, mass_dict[ix], intensity_dict[ix]
-            #raise RuntimeError
-
             # build a cleaned up mass spectrum
             N = len(intensity_list)
-            intensity_list2 = []
+            intensity_list_new = []
 
             for jj in range(N):
                 if jj in top_index_list:
-                    intensity_list2.append(intensity_dict[jj])
+                    intensity_list_new.append(intensity_dict[jj])
                 else:
-                    intensity_list2.append(0.0)
+                    intensity_list_new.append(0.0)
 
-            self.__intensity_matrix[ii] = intensity_list2
+            self.__intensity_matrix[ii] = intensity_list_new
  
 ## get_ms_at_time()
 
