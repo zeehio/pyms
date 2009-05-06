@@ -30,6 +30,7 @@ import operator
 from pyms.Utils.Error import error
 from pyms.Utils.Utils import is_str, is_int, is_array, is_list, is_number
 from pyms.Utils.IO import open_for_writing, close_for_writing
+from pyms.Utils.Time import time_str_secs 
 
 class GCMS_data(object):
 
@@ -224,15 +225,139 @@ class GCMS_data(object):
 
         self.__tic = tic
 
-    def write_intensities(self, file_name):
+    def __scan_values(self, N, first_scan, last_scan):
+
+
+        """
+        @summary: Filters first and last scan values
+
+        @param N: Total number of scans
+        @type N: IntType
+        @param first_scan: The first scan number
+        @type first_scan: IntType
+        @param last_scan: The first scan number
+        @type last_scan: IntType
+
+        @return: A tuple first_scan, last_scan checked
+        @rtype: TupleType
+
+        @author: Vladimir Likic
+        """
+
+        if first_scan == None:
+           first_scan = 0
+        # scan is given. first check that this is sensible
+        elif not is_int(first_scan) or first_scan < 1:
+           error("first scan must be an integer > 0")
+        # adjust for python indexing
+        else:
+           first_scan = first_scan - 1
+
+        if last_scan == None:
+           last_scan = N-1
+        # scan is given. first check that this is sensible
+        elif not is_int(last_scan) or last_scan < 1:
+           error("last scan must be an integer > 0")
+        # check that last scan is not greater than the number of scans,
+        # and if ok adjust for python indexing
+        else:
+           if last_scan > N:
+               error("last scan greater than max number of scans (%d)" % (N))
+           else:
+               last_scan = last_scan - 1
+
+        # last_scan can be equal to first_scan, but not greater
+        if last_scan < first_scan:
+           error("last scan cannot be greater than first scan")
+
+        return first_scan, last_scan
+
+    def trim(self, begin=None, end=None):
+
+        """
+        @summary: trims data in the time domain 
+
+        @param begin: begin parameter designating start time or
+            scan number 
+        @type begin: IntType or StrType
+        @param end: end parameter designating start time or
+            scan number 
+        @type end: IntType or StrType
+
+        The arguments 'begin' and 'end' can be either integers
+        (in which case they are taken as the first/last scan
+        number for trimming) or strings in which case they are
+        treated as time strings and converted to scan numbers.
+
+        At present both 'begin' and 'end' must be of the same
+        type, either both scan numbers or time strings.
+
+        @author: Vladimir Likic
+        """
+
+        # trim called with defaults, or silly arguments
+        if begin == None and end == None:
+            print "Nothing to do."
+            return # exit immediately
+        # trim called with integer arguments
+        elif is_int(begin) and is_int(end):
+            first_scan = begin
+            last_scan = end
+        # trim called with time strings as arguments
+        elif is_str(begin) and is_str(end):
+            start_rt = time_str_secs(begin)
+            end_rt = time_str_secs(end)
+            # get index and pretend that scan numbers counting
+            # from 1 were given, to be consistent with manually
+            # given scan numbers
+            first_scan = self.get_index_at_time(start_rt) + 1
+            last_scan = self.get_index_at_time(end_rt) + 1
+        else:
+            error("invalid 'begin' and 'end' arguments")
+
+        # get the first and last scans for trimming
+        N = len(self.__scan_list)
+        # sanity check and reduce scan numbers to python indices
+        first_scan, last_scan = self.__scan_values(N, first_scan, last_scan)
+
+        print "Trimming data to between %d and %d scans" % \
+                (first_scan+1, last_scan+1)
+
+        scan_list_new = []
+        time_list_new = []
+        for ii in range(len(self.__scan_list)):
+            if ii >= first_scan and ii <= last_scan:
+                scan = self.__scan_list[ii]
+                time = self.__time_list[ii]
+                scan_list_new.append(scan)
+                time_list_new.append(time)
+
+        self.__time_list = time_list_new
+        self.__scan_list = scan_list_new
+
+        self.__min_rt = min(time_list_new)
+        self.__max_rt = max(time_list_new)
+
+    def write_intensities(self, file_name, begin=None, end=None):
 
         """
         @summary: Writes all intensities to a file
+
+        @param file_name: Output file name
+        @type file_name: StringType
+        @param begin: The first scan to write
+        @type begin: IntType (default: None)
+        @param end: The last scan to write
+        @type end: IntType (default: None)
 
         This function loop over all scans, and for each
         scan writes intensities to the file, one intenisity
         per line. Intensities from different scans are
         joined without any delimiters.
+
+        Parameters 'begin' and 'end' are scan numbers not
+        python indices, ie. begin = 1 refers to the first
+        scan.
 
         @author: Vladimir Likic
         """
@@ -240,12 +365,20 @@ class GCMS_data(object):
         if not is_str(file_name):
             error("'file_name' must be a string")
 
+        N = len(self.__scan_list)
+        first_scan, last_scan = self.__scan_values(N, begin, end)
+
+        # checking arguments passed
+        print(" -> Writing scans %d to %d to a file" % (first_scan+1, last_scan+1))
+
         fp = open_for_writing(file_name)
 
-        for scan in self.__scan_list:
-            intensities = scan.get_intensity_list()
-            for I in intensities:
-                fp.write("%8.4f\n" % (I))
+        for ii in range(len(self.__scan_list)):
+            if ii >= first_scan and ii <= last_scan:
+                scan = self.__scan_list[ii]
+                intensities = scan.get_intensity_list()
+                for I in intensities:
+                    fp.write("%8.4f\n" % (I))
 
         close_for_writing(fp)
 
@@ -935,7 +1068,7 @@ class IonChromatogram(object):
         """
         @summary: Writes the ion chromatogram to the specified file
 
-        @param file_name: File for writing the ion chromatogram
+        @param file_name: Output file name
         @type file_name: StringType
         @param minutes: A boolean value indicating whether to write
             time in minutes
