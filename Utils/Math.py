@@ -147,4 +147,55 @@ def amin(v):
 
     return mini, minv
 
+def mean(v):
+
+    """
+    @summary: Calculates the mean
+
+    @param v: A list or array
+    @type v: ListType, TupleType, or numpy.core.ndarray
+
+    @return: Mean
+    @rtype: FloatType
+
+    @author: Vladimir Likic
+    """
+
+    if not is_list(v):
+        error("argument neither list nor array")
+
+    s = 0.0
+    for e in v:
+        s = s + e 
+    s_mean = s/float(len(v))
+
+    return s_mean
+
+def std(v):
+
+    """
+    @summary: Calculates standard deviation
+
+    @param v: A list or array
+    @type v: ListType, TupleType, or numpy.core.ndarray
+
+    @return: Mean
+    @rtype: FloatType
+
+    @author: Vladimir Likic
+    """
+
+    if not is_list(v):
+        error("argument neither list nor array")
+
+    v_mean = mean(v)
+
+    s = 0.0 
+    for e in v:
+        d = e - v_mean
+        s = s + d*d
+    s_mean = s/float(len(v)-1)
+    v_std = math.sqrt(s_mean)
+
+    return v_std
 

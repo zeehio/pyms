@@ -30,13 +30,14 @@ import operator
 from pyms.Utils.Error import error
 from pyms.Utils.Utils import is_str, is_int, is_array, is_list, is_number
 from pyms.Utils.IO import open_for_writing, close_for_writing
+from pyms.Utils.Math import mean, std
 from pyms.Utils.Time import time_str_secs 
 
 class GCMS_data(object):
 
     """
-    @summary: Generic object for GC-MS data
-        Contains raw data as a list of scans and times
+    @summary: Generic object for GC-MS data. Contains raw data
+        as a list of scans and times
 
     @author: Qiao Wang
     @author: Andrew Isaac
@@ -60,17 +61,62 @@ class GCMS_data(object):
 
         if not is_list(time_list) or not is_number(time_list[0]):
             error("'time_list' must be a list of numbers")
+
         if not is_list(scan_list) or not isinstance(scan_list[0], Scan):
             error("'scan_list' must be a list of Scan objects")
 
+        self.__set_time(time_list)
+        self.__scan_list = scan_list
+        self.__set_min_max_mass()
+        self.__calc_tic()
+
+    def __set_time(self, time_list):
+
+        """
+        @summary: Sets time-related properties of the data
+
+        @param time_list: List of retention times
+        @type time_list: ListType
+
+        @author: Vladimir Likic
+        """
+
+        # calculate the time step, its spreak, and along the way
+        # check that retention times are increasing
+        time_diff_list = []
+
+        for ii in range(len(time_list)-1):
+            t1 = time_list[ii] 
+            t2 = time_list[ii+1] 
+            if not t2 > t1:
+                error("problem with retention times detected")
+            time_diff = t2 - t1
+            time_diff_list.append(time_diff)
+
+        time_step = mean(time_diff_list)
+        time_step_std = std(time_diff_list)
+
         self.__time_list = time_list
+        self.__time_step = time_step
+        self.__time_step_std = time_step_std
         self.__min_rt = min(time_list)
         self.__max_rt = max(time_list)
 
-        self.__scan_list = scan_list
-        self.__set_min_max_mass()
+    def info(self):
 
-        self.__calc_tic()
+        """
+        @summary: Prints some information about the data
+
+        @author: Vladimir Likic
+        """
+
+        print " Data retention time range: %.3f min -- %.3f min" % \
+                (self.__min_rt/60.0, self.__max_rt/60)
+        print " Time step: %.3f s (std=%.3f s)" % ( self.__time_step, \
+                self.__time_step_std )
+        print " Number of scans: %d" % ( len(self.__scan_list) )
+        print " Minimum m/z measured: %.3f" % ( self.__min_mass )
+        print " Maximum m/z measured: %.3f" % ( self.__max_mass )
 
     def __set_min_max_mass(self):
 
