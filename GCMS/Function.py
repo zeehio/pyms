@@ -22,6 +22,8 @@ Provides generic IO functions for GC-MS data objects
  #                                                                           #
  #############################################################################
 
+import math
+
 from pyms.Utils.Error import error
 from pyms.Utils.Utils import is_number, is_str, is_array, is_list, is_int
 from pyms.GCMS.Class import GCMS_data, IntensityMatrix
@@ -129,3 +131,56 @@ def __fill_bins(data, min_mass, max_mass, bin_size):
         intensity_matrix.append(intensitylist)
 
     return IntensityMatrix(data.get_time_list(), mass_list, intensity_matrix)
+
+def diff(im1, im2):
+
+    """
+    @summary: Check if 2 data sets are the same
+
+    @param im1: Intensity matrix of data set 1
+    @type im1: ListType
+    @param im2: Intensity matrix of data set 2
+    @type im2: ListType
+
+    @author: Qiao Wang
+    @author: Andrew Isaac
+    @author: Vladimir Likic
+    """
+
+    row1, col1 = im1.get_size()
+    row2, col2 = im2.get_size()
+
+    if(not (row1==row2)):
+        error("Error: number of scans is different");
+
+    if(not (col1==col2)):
+        error("Error: number of masses is different")
+
+    time1 = im1.get_time_list()
+    time2 = im2.get_time_list()
+
+    mass1 = im1.get_mass_list()
+    mass2 = im2.get_mass_list()
+
+    sum = 0.0
+
+    for i in range(len(time1)):
+        sum = sum + (time1[i] - time2[i]) ** 2
+    time_RMSD = math.sqrt(sum / len(time1))
+
+    sum = 0.0
+
+    for i in range(len(mass1)):
+        sum = sum + (mass1[i] - mass2[i]) ** 2
+    mass_RMSD = math.sqrt(sum / len(mass1))
+
+    print "Time RMSD: ", time_RMSD
+    print "Mass RMSD: ", mass_RMSD
+    if time_RMSD > 2.1e-3:
+
+        error("Error: RMSD for time exceed the 2.1e - 3")
+
+    if mass_RMSD > 2.0e-6:
+        error("Error: RMSD for mass exceed the 2.0e - 6")
+
+    print "Two data set are the same"
