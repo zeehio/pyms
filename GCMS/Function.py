@@ -138,9 +138,9 @@ def diff(data1, data2):
     @summary: Check if 2 data sets are the same
 
     @param im1: GCMS data set 1
-    @type im1: ListType
+    @type im1: pyms.GCMS.Class.GCMS_data
     @param im2: GCMS data set 2
-    @type im2: ListType
+    @type im2: pyms.GCMS.Class.GCMS_data
 
     @author: Qiao Wang
     @author: Andrew Isaac
