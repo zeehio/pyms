@@ -132,14 +132,14 @@ def __fill_bins(data, min_mass, max_mass, bin_size):
 
     return IntensityMatrix(data.get_time_list(), mass_list, intensity_matrix)
 
-def diff(im1, im2):
+def diff(data1, data2):
 
     """
     @summary: Check if 2 data sets are the same
 
-    @param im1: Intensity matrix of data set 1
+    @param im1: GCMS data set 1
     @type im1: ListType
-    @param im2: Intensity matrix of data set 2
+    @param im2: GCMS data set 2
     @type im2: ListType
 
     @author: Qiao Wang
@@ -147,40 +147,57 @@ def diff(im1, im2):
     @author: Vladimir Likic
     """
 
-    row1, col1 = im1.get_size()
-    row2, col2 = im2.get_size()
+    # calculate the time RMSD
+    time1 = data1.get_time_list()
+    time2 = data2.get_time_list()
+    len_time1 = str(len(time1))
+    len_time2 = str(len(time2))
 
-    if(not (row1==row2)):
-        error("Error: number of scans is different");
-
-    if(not (col1==col2)):
-        error("Error: number of masses is different")
-
-    time1 = im1.get_time_list()
-    time2 = im2.get_time_list()
-
-    mass1 = im1.get_mass_list()
-    mass2 = im2.get_mass_list()
-
+    if not len(time1)==len(time2):
+        error_type = "Error: the number of time points are different. "
+        error_content = "len(time1), and len(time2) are: "
+        error(error_type + error_content + len_time1 + ", " + len_time2)
     sum = 0.0
-
     for i in range(len(time1)):
         sum = sum + (time1[i] - time2[i]) ** 2
     time_RMSD = math.sqrt(sum / len(time1))
 
-    sum = 0.0
-
-    for i in range(len(mass1)):
-        sum = sum + (mass1[i] - mass2[i]) ** 2
-    mass_RMSD = math.sqrt(sum / len(mass1))
-
     print "Time RMSD: ", time_RMSD
-    print "Mass RMSD: ", mass_RMSD
     if time_RMSD > 2.1e-3:
+        error("Error: RMSD for time must not exceed the 2.1e - 3")
 
-        error("Error: RMSD for time exceed the 2.1e - 3")
+    #calculate the mass RMSD
+    scan_list1 = data1.get_scan_list()
+    scan_list2 = data2.get_scan_list()
+    len_scan1 = str(len(scan_list1))
+    len_scan2 = str(len(scan_list2))
 
-    if mass_RMSD > 2.0e-6:
-        error("Error: RMSD for mass exceed the 2.0e - 6")
+    if not len(scan_list1)==len(scan_list2):
+        error_type = "Error: the number of scans are different. "
+        error_content = "len(scan_list1), and len(scan_list2) are: "
+        error(error_type + error_content + len_scan1 + ", " + len_scan2)
+
+    for j in range(len(scan_list1)):
+        mass1 = scan_list1[j].get_mass_list()
+        mass2 = scan_list2[j].get_mass_list()
+        len_mass1 = str(len(mass1))
+        len_mass2 = str(len(mass2))
+        if not len(mass1)==len(mass2):
+            error_type = "Error: the number of masses are different. "
+            error_content = "Scan number: " + str(j) + ". " + "len(mass1), len(mass2) are: "
+            error(error_type + error_content + len_mass1 + ", " + len_mass2)
+        else:
+            mass_RMSD = 0.0
+            sum = 0.0
+            for k in range(len(mass1)):
+                sum = sum + (mass1[k] - mass2[k]) ** 2
+            mass_RMSD = math.sqrt(sum / len(mass1))
+            print "Mass RMSD for scan point " + str(j) + ": ", mass_RMSD
+            if mass_RMSD > 2.0e-5:
+                error("Scan number: " + str(j) + ". Error: RMSD for mass must not exceed the 2.0e - 5")
+            else:
+                pass
+        mass1 = []
+        mass2 = []
 
     print "Two data set are the same"

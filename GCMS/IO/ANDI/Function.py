@@ -88,6 +88,8 @@ def ANDI_reader(file_name):
             intensity_previous = intensity_values[i + 1]
             mass_list = []
             intensity_list = []
+            mass_list.append(mass_previous)
+            intensity_list.append(intensity_previous)
     # store final scan
     scan_list.append(Scan(mass_list, intensity_list))
     time = file.var(__TIME_STRING)
