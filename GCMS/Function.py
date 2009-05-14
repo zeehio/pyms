@@ -163,9 +163,7 @@ def diff(data1, data2):
         sum = sum + (time1[i] - time2[i]) ** 2
     time_RMSD = math.sqrt(sum / len(time1))
 
-    print "Time RMSD: ", time_RMSD
-    if time_RMSD > 2.1e-3:
-        error("Error: RMSD for time must not exceed the 2.1e - 3")
+    print "Time RMSD: %.2e" % time_RMSD
 
     scan_list1 = data1.get_scan_list()
     scan_list2 = data2.get_scan_list()
@@ -198,8 +196,4 @@ def diff(data1, data2):
             mass_RMSD = math.sqrt(sum / len(mass1))
             if mass_RMSD > max_mass:
                 max_mass = mass_RMSD
-    print "Max Mass RMSD: ", max_mass
-    if mass_RMSD > 2.0e-6:
-        error("Scan number: " + str(j) + ". Error: RMSD for mass must not exceed the 2.0e - 6")
-
-    print "Two data set are the same"
+    print "Max Mass RMSD: %.2e" % max_mass
