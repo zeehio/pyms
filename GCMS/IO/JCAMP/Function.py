@@ -108,4 +108,3 @@ def JCAMP_reader(file_name):
     data = GCMS_data(time_list, scan_list)
 
     return data
-
