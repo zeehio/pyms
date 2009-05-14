@@ -947,6 +947,7 @@ class IonChromatogram(object):
 
         @author: Lewis Lee
         @author: Vladimir Likic
+        @author: Vladimir Likic
         """
 
         if not isinstance(ia, numpy.ndarray):
@@ -962,6 +963,8 @@ class IonChromatogram(object):
         self.__time_list = time_list
         self.__mass = mass
         self.__time_step = self.__calc_time_step(time_list)
+        self.__min_rt = min(time_list)
+        self.__max_rt = max(time_list)
 
     def __len__(self):
 
@@ -1089,6 +1092,45 @@ class IonChromatogram(object):
         time_step = td_array.mean()
 
         return time_step
+
+    def get_index_at_time(self, time):
+
+        """
+        @summary: Returns the nearest index corresponding to the given time
+
+        @param time: Time in seconds
+        @type time: FloatType
+
+        @return: Nearest index corresponding to given time
+        @rtype: IntType
+
+        @author: Lewis Lee
+        @author: Tim Erwin
+        @author: Vladimir Likic
+        @author: Milica Ng
+        """
+
+        if not is_number(time):
+            error("'time' must be a number")
+
+        if time < self.__min_rt or time > self.__max_rt:
+            error("time %.2f is out of bounds (min: %.2f, max: %.2f)" %
+                  (time, self.__min_rt, self.__max_rt))
+
+        time_list = self.__time_list
+        time_diff_min = self.__max_rt
+        ix_match = None
+
+        for ix in range(len(time_list)):
+
+
+            time_diff = math.fabs(time-time_list[ix])
+
+            if time_diff < time_diff_min:
+                ix_match = ix
+                time_diff_min = time_diff
+
+        return ix_match
 
     def is_tic(self):
 
