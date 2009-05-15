@@ -30,7 +30,7 @@ import operator
 from pyms.Utils.Error import error
 from pyms.Utils.Utils import is_str, is_int, is_array, is_list, is_number
 from pyms.Utils.IO import open_for_writing, close_for_writing
-from pyms.Utils.Math import mean, std
+from pyms.Utils.Math import mean, std, median
 from pyms.Utils.Time import time_str_secs 
 
 class GCMS_data(object):
@@ -101,22 +101,6 @@ class GCMS_data(object):
         self.__time_step_std = time_step_std
         self.__min_rt = min(time_list)
         self.__max_rt = max(time_list)
-
-    def info(self):
-
-        """
-        @summary: Prints some information about the data
-
-        @author: Vladimir Likic
-        """
-
-        print " Data retention time range: %.3f min -- %.3f min" % \
-                (self.__min_rt/60.0, self.__max_rt/60)
-        print " Time step: %.3f s (std=%.3f s)" % ( self.__time_step, \
-                self.__time_step_std )
-        print " Number of scans: %d" % ( len(self.__scan_list) )
-        print " Minimum m/z measured: %.3f" % ( self.__min_mass )
-        print " Maximum m/z measured: %.3f" % ( self.__max_mass )
 
     def __set_min_max_mass(self):
 
@@ -383,6 +367,39 @@ class GCMS_data(object):
 
         self.__min_rt = min(time_list_new)
         self.__max_rt = max(time_list_new)
+
+    def info(self, print_scan_n=False):
+
+        """
+        @summary: Prints some information about the data
+
+        @param print_scan_n: If set to True will print the number
+            of m/z values in each scan
+        @type print_scan_n: BooleanType
+
+        @author: Vladimir Likic
+        """
+
+        # print the summary of simply attributes
+        print " Data retention time range: %.3f min -- %.3f min" % \
+                (self.__min_rt/60.0, self.__max_rt/60)
+        print " Time step: %.3f s (std=%.3f s)" % ( self.__time_step, \
+                self.__time_step_std )
+        print " Number of scans: %d" % ( len(self.__scan_list) )
+        print " Minimum m/z measured: %.3f" % ( self.__min_mass )
+        print " Maximum m/z measured: %.3f" % ( self.__max_mass )
+
+        # calculate median number of m/z values measured per scan
+        n_list = []
+        for ii in range(len(self.__scan_list)):
+            scan = self.__scan_list[ii]
+            n = len(scan)
+            n_list.append(n)
+            if print_scan_n: print n
+        mz_mean = mean(n_list)
+        mz_median = median(n_list)
+        print " Mean number of m/z values per scan: %d" % ( mz_mean )
+        print " Median number of m/z values per scan: %d" % ( mz_median )
 
     def write_intensities(self, file_name, begin=None, end=None):
 
