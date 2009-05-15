@@ -401,6 +401,46 @@ class GCMS_data(object):
         print " Mean number of m/z values per scan: %d" % ( mz_mean )
         print " Median number of m/z values per scan: %d" % ( mz_median )
 
+    def write(self, file_root):
+
+        """
+        @summary: Writes the entire raw data to two files, one
+            'file_root'.I (intensities) and 'file_root'.mz (m/z
+            values.
+
+        @param file_root: The rood for the output file names
+        @type file_root: StringType
+        
+        @author: Vladimir Likic
+        """
+
+        if not is_str(file_root):
+            error("'file_root' must be a string")
+
+        file1 = file_root + ".I"
+        file2 = file_root + ".mz"
+
+        fp1 = open_for_writing(file1)
+        fp2 = open_for_writing(file2)
+
+        for ii in range(len(self.__scan_list)):
+
+            scan = self.__scan_list[ii]
+
+            intensities = scan.get_intensity_list()
+            masses = scan.get_mass_list()
+
+            for item in intensities:
+                fp1.write("%8.4f " % (item))
+            fp1.write("\n")
+
+            for item in masses:
+                fp2.write("%8.4f " % (item))
+            fp2.write("\n")
+
+        close_for_writing(fp1)
+        close_for_writing(fp2)
+
     def write_intensities(self, file_name, begin=None, end=None):
 
         """
