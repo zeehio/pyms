@@ -28,6 +28,8 @@ from pyms.Utils.IO import file_lines
 from pyms.Utils.Utils import is_str
 from pyms.Utils.Error import error
 
+import numpy
+
 def JCAMP_reader(file_name):
 
     """
@@ -89,6 +91,7 @@ def JCAMP_reader(file_name):
                     for item in data_sub:
                         if not len(item.strip()) == 0:
                             data.append(float(item.strip()))
+
     if len(data) % 2 == 1:
         error("data not in pair !")
     # get last scan
@@ -97,6 +100,7 @@ def JCAMP_reader(file_name):
     for i in range(len(data) / 2):
         mass.append(data[i * 2])
         intensity.append(data[i * 2 + 1])
+
     if not len(mass) == len(intensity):
         error("len(mass) is not equal to len(intensity)")
     scan_list.append(Scan(mass, intensity))

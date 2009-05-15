@@ -178,22 +178,41 @@ def diff(data1, data2):
 
     #calculate the max mass RMSD
     max_mass = 0.0
+    max_inten = 0.0
     for j in range(len(scan_list1)):
         mass1 = scan_list1[j].get_mass_list()
         mass2 = scan_list2[j].get_mass_list()
+        inten1 = scan_list1[j].get_intensity_list()
+        inten2 = scan_list2[j].get_intensity_list()
         len_mass1 = str(len(mass1))
         len_mass2 = str(len(mass2))
+        len_inten1 = str(len(inten1))
+        len_inten2 = str(len(inten2))
+
         #comapre for each scan point if the dimesnstions of 2 masses are the same
         if not len(mass1)==len(mass2):
             error_type = "Error: the number of masses are different. "
             error_content = "Scan number: " + str(j) + ". " + "len(mass1), len(mass2) are: "
             error(error_type + error_content + len_mass1 + ", " + len_mass2)
+        if not len(inten1)==len(inten2):
+            error_type = "Error: the number of intensities are different. "
+            error_content = "Scan number: " + str(j) + ". " + "len(inten1), len(inten2) are: "
+            error(error_type + error_content + len_inten1 + ", " + len_inten2)
         else:
             mass_RMSD = 0.0
+            inten_RMSD = 0.0
             sum = 0.0
+            total = 0.0
             for k in range(len(mass1)):
                 sum = sum + (mass1[k] - mass2[k]) ** 2
             mass_RMSD = math.sqrt(sum / len(mass1))
             if mass_RMSD > max_mass:
                 max_mass = mass_RMSD
+            for k in range(len(inten1)):
+                total = total + (inten1[k] - inten2[k]) ** 2
+            inten_RMSD = math.sqrt(total / len(inten1))
+            if inten_RMSD > max_inten:
+                max_inten = inten_RMSD
+
     print "Max Mass RMSD: %.2e" % max_mass
+    print "Max Intensity RMSD: %.2e" % max_inten
