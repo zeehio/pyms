@@ -152,14 +152,80 @@ def diff(data1, data2):
     time_list1 = data1.get_time_list()
     time_list2 = data2.get_time_list()
 
-    # check if the time dimenstions are the same
+    # check if the time dimensions are the same
     if not len(time_list1) == len(time_list2):
         print " -> The number of retention time points different."
         print " First data set: %d time points" % (len(time_list1))
         print " Second data set: %d time points" % (len(time_list2))
+        error("Different number of time points")
     else:
         rmsd = RMSD(time_list1, time_list2)
         print "Time RMSD: %.2e" % ( rmsd )
+
+    scan_list1 = data1.get_scan_list()
+    scan_list2 = data2.get_scan_list()
+    # check if the scan list dimensions are the same
+    if not len(scan_list1) == len(scan_list2):
+        print " -> The number of scan points different."
+        print " First data set: %d scan points" % (len(scan_list1))
+        print " Second data set: %d scan points" % (len(scan_list2))
+        error("Different number of scan points")
+
+    #calculate the max mass RMSD
+    max_mass = 0.0
+    max_intensity = 0.0
+    for j in range(len(scan_list1)):
+        mass1 = scan_list1[j].get_mass_list()
+        mass2 = scan_list2[j].get_mass_list()
+        intensity1 = scan_list1[j].get_intensity_list()
+        intensity2 = scan_list2[j].get_intensity_list()
+
+        #check if the mass list dimensions are the same
+        if not len(mass1) == len(mass2):
+            print " -> The number of masses are different."
+            print "Scan Point ", j, ": First data set: %d masses" % (len(mass1))
+            print "Scan Point ", j, ": Second data set: %d masses" % (len(mass2))
+            error("Different number of masses")
+        else:
+            rmsd = RMSD(mass1, mass2)
+            if rmsd > max_mass:
+                max_mass = rmsd
+        #check if the intensity list dimensions are the same
+        if not len(intensity1) == len(intensity2):
+            print " -> The number of intensities are different."
+            print "Scan Point ", j, ": First data set: %d intensities" % (len(intensity1))
+            print "Scan Point ", j, ": Second data set: %d intensities" % (len(intensity2))
+            error("Different number of intensities")
+        else:
+            rmsd = RMSD(intensity1, intensity2)
+            if rmsd > max_intensity:
+                max_intensity = rmsd
+
+    print "Max Mass RMSD: %.2e" % max_mass
+    print "Max Intensity RMSD: %.2e" % max_intensity
+
+def RMSD(list1, list2):
+
+    """
+    @summary: Calculates RMSD for the 2 lists
+
+    @param list1: First data set
+    @type list1: ListType
+    @param list2: Second data set
+    @type list2: ListType
+    @return: RMSD value
+    @rtype: FloatType
+
+    @author: Qiao Wang
+    @author: Andrew Isaac
+    @author: Vladimir Likic
+    """
+
+    sum = 0.0
+    for i in range(len(list1)):
+        sum = sum + (list1[i] - list2[i]) ** 2
+    rmsd = math.sqrt(sum / len(list1))
+    return rmsd
 
 def is_ionchromatogram(arg):
 
@@ -227,4 +293,3 @@ def ic_window_points(ic, window_sele, half_window=False):
         if points < 2: error("window too small (window=%d)" % (points))
 
     return points
-
