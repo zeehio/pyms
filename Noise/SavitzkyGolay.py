@@ -34,7 +34,7 @@ __DEFAULT_PLOYNOMIAL_DEGREE = 2
 def savitzky_golay(ic, window=__DEFAULT_WINDOW, degree=__DEFAULT_PLOYNOMIAL_DEGREE):
 
     """
-    @summary: Applies Savitzky-Golay smoothing on ion chromatogram
+    @summary: Applies Savitzky-Golay filter on ion chromatogram
 
     @param ic: The input ion chromatogram
     @type ic: pyms.IO.Class.IonChromatogram
@@ -63,6 +63,10 @@ def savitzky_golay(ic, window=__DEFAULT_WINDOW, degree=__DEFAULT_PLOYNOMIAL_DEGR
     ia = ic.get_intensity_array()
 
     wing_length = ic_window_points(ic, window, half_window=True)
+
+    print " -> Applying Savitzky-Golay filter"
+    print "      Window width (points): %d" % ( 2*wing_length+1 )
+    print "      Polynomial degree: %d" % ( degree )
 
     coeff = __calc_coeff(wing_length, degree)
     ia_denoise = __smooth(ia, coeff)
