@@ -23,8 +23,11 @@ Provides a class to perform Biller and Biemann deconvolution
  #                                                                           #
  #############################################################################
 
+import numpy
+
 from pyms.Utils.Error import error
 from pyms.Utils.Utils import is_list, is_number, is_int
+from pyms.GCMS.Class import IonChromatogram
 
 #######################
 # structure
@@ -33,7 +36,7 @@ from pyms.Utils.Utils import is_list, is_number, is_int
 # 3) sum ions belonging to each maxima scan
 #######################
 
-def BillerBiemann():
+def BillerBiemann(im, window=1):
 
     """
     @summary: BillerBiemann Deconvolution
@@ -59,6 +62,19 @@ def BillerBiemann():
     @author: Andrew Isaac
     """
 
+    maxima_im = get_maxima_matrix(im)
+    sums = []
+    numrows = len(maxima_im)
+    half = int(window/2)
+    for row in range(numrows):
+        val = 0
+        for ii in range(window):
+            if row - half + ii >= 0 and row - half + ii < numrows:
+                val += maxima_im[row - half + ii].sum()
+        sums.append(val)
+    tic = IonChromatogram(numpy.array(sums), im.get_time_list())
+
+    return tic
 
 def get_maxima_indices(ion_intensities):
 
@@ -101,3 +117,20 @@ def get_maxima_list(ic):
         intens = ic.get_intensity_at_index(peak_point[index])
         mlist.append([rt, intens])
     return mlist
+
+def get_maxima_matrix(im):
+    numrows, numcols = im.get_size()
+    # zeroed matrix, size numrows*numcols
+    # bad initialisation!! makes numrows copy of the same row!!!
+    # maxima_im = [[0]*numcols]*numrows
+    maxima_im = numpy.zeros((numrows, numcols))
+    raw_im = numpy.array(im.get_matrix_list())
+
+    for col in range(numcols):  # assume all rows have same width
+        # 1st, find maxima
+        maxima = get_maxima_indices(raw_im[:,col])
+        # 2nd, fill intensities
+        for row in maxima:
+            maxima_im[row, col] = raw_im[row, col]
+
+    return maxima_im
