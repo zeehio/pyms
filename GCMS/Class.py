@@ -976,7 +976,7 @@ class IntensityMatrix(object):
 class IonChromatogram(object):
 
     """
-    @summary: Models ion chromatogram
+    @summary: Models an ion chromatogram
 
     An ion chromatogram is a set of intensities as a function of retention
     time. This can can be either m/z channel intensities (for example, ion
@@ -1163,8 +1163,8 @@ class IonChromatogram(object):
 
         @author: Lewis Lee
         @author: Tim Erwin
-        @author: Vladimir Likic
         @author: Milica Ng
+        @author: Vladimir Likic
         """
 
         if not is_number(time):
@@ -1207,6 +1207,23 @@ class IonChromatogram(object):
             return True
         else:
             return False
+
+    def set_intensity_array(self, ia):
+
+        """
+        @summary: Sets the value for the intensity array
+
+        @param ia: An array of new intensity values
+        @type ia: numpy.ndarray
+
+        @return: none
+        @rtype: NoneType
+
+        @author: Vladimir Likic
+        """
+
+        self.__ia = ia
+
 
     def write(self, file_name, minutes=False):
 

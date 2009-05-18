@@ -26,7 +26,8 @@ import math
 
 from pyms.Utils.Error import error
 from pyms.Utils.Utils import is_number, is_str, is_array, is_list, is_int
-from pyms.GCMS.Class import GCMS_data, IntensityMatrix
+from pyms.GCMS.Class import GCMS_data, IntensityMatrix, IonChromatogram
+from pyms.Utils.Time import time_str_secs
 
 def build_intensity_matrix(data, bin_size = 1):
 
@@ -159,4 +160,71 @@ def diff(data1, data2):
     else:
         rmsd = RMSD(time_list1, time_list2)
         print "Time RMSD: %.2e" % ( rmsd )
+
+def is_ionchromatogram(arg):
+
+    """
+    @summary: Returns True if the argument is a pyms.IO.Class.IonCromatogram
+        object, False otherwise
+
+    @param arg: The argument to be evaluated as IonCromatogram object
+    @type arg: arbitrary
+
+    @return: A boolean indicator True or False
+    @rtype: BooleanType
+
+    @author: Vladimir Likic
+    """
+
+    if isinstance(arg,IonChromatogram):
+        return True
+    else:
+        return False
+
+def ic_window_points(ic, window_sele, half_window=False):
+
+    """
+    @summary: Converts window selection parameter into points based on
+        the time step in an ion chromatogram 
+
+    @param ic: ion chromatogram object relevant for the conversion
+    @type ic: pyms.IO.Class.IonChromatogram
+    @param window_sele: The window selection parameter. This can be an
+        integer or time string. If integer, taken as the number of points.
+        If a string, must of the form "<NUMBER>s" or "<NUMBER>m",
+        specifying a time in seconds or minutes, respectively
+    @type window_sele: IntType or StringType 
+    @param half_window: Specifies whether to return half-window
+    @type half_window: Booleantype
+
+    @author: Vladimir Likic
+    """
+
+    if not is_int(window_sele) and not is_str(window_sele):
+        error("'window' must be either an integer or a string")
+
+    if is_int(window_sele):
+
+        if half_window:
+            if window_sele % 2 == 0: 
+                error("window must be an odd number of points")
+            else: 
+                points = int(math.floor(window_sele*0.5))
+        else:
+            points = window_sele
+    else:
+        time = time_str_secs(window_sele)
+        time_step = ic.get_time_step()
+
+        if half_window:
+            time = time*0.5
+
+        points = int(math.floor(time/time_step))
+
+    if half_window:
+        if points < 1: error("window too small (half window=%d)" % (points))
+    else:
+        if points < 2: error("window too small (window=%d)" % (points))
+
+    return points
 
