@@ -417,11 +417,14 @@ class GCMS_data(object):
         if not is_str(file_root):
             error("'file_root' must be a string")
 
-        file1 = file_root + ".I"
-        file2 = file_root + ".mz"
+        file_name1 = file_root + ".I"
+        file_name2 = file_root + ".mz"
 
-        fp1 = open_for_writing(file1)
-        fp2 = open_for_writing(file2)
+        print " -> Writing intensities to '%s'" % ( file_name1 )
+        print " -> Writing m/z values to '%s'" % ( file_name2 )
+
+        fp1 = open_for_writing(file_name1)
+        fp2 = open_for_writing(file_name2)
 
         for ii in range(len(self.__scan_list)):
 
@@ -441,26 +444,18 @@ class GCMS_data(object):
         close_for_writing(fp1)
         close_for_writing(fp2)
 
-    def write_intensities(self, file_name, begin=None, end=None):
+    def write_intensities_stream(self, file_name):
 
         """
         @summary: Writes all intensities to a file
 
         @param file_name: Output file name
         @type file_name: StringType
-        @param begin: The first scan to write
-        @type begin: IntType (default: None)
-        @param end: The last scan to write
-        @type end: IntType (default: None)
 
         This function loop over all scans, and for each
         scan writes intensities to the file, one intenisity
         per line. Intensities from different scans are
         joined without any delimiters.
-
-        Parameters 'begin' and 'end' are scan numbers not
-        python indices, ie. begin = 1 refers to the first
-        scan.
 
         @author: Vladimir Likic
         """
@@ -469,19 +464,16 @@ class GCMS_data(object):
             error("'file_name' must be a string")
 
         N = len(self.__scan_list)
-        first_scan, last_scan = self.__scan_values(N, begin, end)
 
-        # checking arguments passed
-        print(" -> Writing scans %d to %d to a file" % (first_scan+1, last_scan+1))
+        print" -> Writing scans to a file"
 
         fp = open_for_writing(file_name)
 
         for ii in range(len(self.__scan_list)):
-            if ii >= first_scan and ii <= last_scan:
-                scan = self.__scan_list[ii]
-                intensities = scan.get_intensity_list()
-                for I in intensities:
-                    fp.write("%8.4f\n" % (I))
+            scan = self.__scan_list[ii]
+            intensities = scan.get_intensity_list()
+            for I in intensities:
+                fp.write("%8.4f\n" % ( I ) )
 
         close_for_writing(fp)
 
