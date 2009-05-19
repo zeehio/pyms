@@ -22,14 +22,15 @@ Provides generic IO functions for GC-MS data objects
  #                                                                           #
  #############################################################################
 
-import math
+import math, sys
 
 from pyms.Utils.Error import error
 from pyms.Utils.Utils import is_number, is_str, is_array, is_list, is_int
 from pyms.GCMS.Class import GCMS_data, IntensityMatrix, IonChromatogram
 from pyms.Utils.Time import time_str_secs
+from pyms.Utils.Math import rmsd
 
-def build_intensity_matrix(data, bin_size = 1):
+def build_intensity_matrix(data, bin_size=1):
 
     """
     @summary: Sets the full intensity matrix with flexible bins
@@ -152,80 +153,75 @@ def diff(data1, data2):
     time_list1 = data1.get_time_list()
     time_list2 = data2.get_time_list()
 
-    # check if the time dimensions are the same
+    #
+    # First, check if two data sets have the same number of retention
+    # times.
+    #
     if not len(time_list1) == len(time_list2):
         print " -> The number of retention time points different."
         print " First data set: %d time points" % (len(time_list1))
         print " Second data set: %d time points" % (len(time_list2))
-        error("Different number of time points")
+        print " Data sets are different."
+        return
     else:
-        rmsd = RMSD(time_list1, time_list2)
-        print "Time RMSD: %.2e" % ( rmsd )
+        time_rmsd = rmsd(time_list1, time_list2)
+        print " Data sets have the same number of time points."
+        print "   Time RMSD: %.2e" % ( time_rmsd )
+
+    #
+    # Second, check if each scan has the same number of m/z intensities
+    #
+
+    print " Checking for consistency in scan lengths ...",
+    sys.stdout.flush()
 
     scan_list1 = data1.get_scan_list()
     scan_list2 = data2.get_scan_list()
-    # check if the scan list dimensions are the same
     if not len(scan_list1) == len(scan_list2):
-        print " -> The number of scan points different."
-        print " First data set: %d scan points" % (len(scan_list1))
-        print " Second data set: %d scan points" % (len(scan_list2))
-        error("Different number of scan points")
+        # since the number of rention times are the same, this indicated
+        # some unexpected problem with data 
+        error("inconsistency in data detected")
 
-    #calculate the max mass RMSD
-    max_mass = 0.0
-    max_intensity = 0.0
-    for j in range(len(scan_list1)):
-        mass1 = scan_list1[j].get_mass_list()
-        mass2 = scan_list2[j].get_mass_list()
-        intensity1 = scan_list1[j].get_intensity_list()
-        intensity2 = scan_list2[j].get_intensity_list()
+    N = len(scan_list1)
 
-        #check if the mass list dimensions are the same
-        if not len(mass1) == len(mass2):
-            print " -> The number of masses are different."
-            print "Scan Point ", j, ": First data set: %d masses" % (len(mass1))
-            print "Scan Point ", j, ": Second data set: %d masses" % (len(mass2))
-            error("Different number of masses")
-        else:
-            rmsd = RMSD(mass1, mass2)
-            if rmsd > max_mass:
-                max_mass = rmsd
-        #check if the intensity list dimensions are the same
-        if not len(intensity1) == len(intensity2):
-            print " -> The number of intensities are different."
-            print "Scan Point ", j, ": First data set: %d intensities" % (len(intensity1))
-            print "Scan Point ", j, ": Second data set: %d intensities" % (len(intensity2))
-            error("Different number of intensities")
-        else:
-            rmsd = RMSD(intensity1, intensity2)
-            if rmsd > max_intensity:
-                max_intensity = rmsd
+    for ii in range(N):
+        scan1 = scan_list1[ii]
+        scan2 = scan_list2[ii]
+        mass_list1 = scan1.get_mass_list()
+        mass_list2 = scan2.get_mass_list()
+        if len(mass_list1) != len(mass_list2):
+            print "\n Different number of points detected in scan no. %d" % ( ii )
+            print " Data sets are different."
+            return
 
-    print "Max Mass RMSD: %.2e" % max_mass
-    print "Max Intensity RMSD: %.2e" % max_intensity
+    print "OK"
 
-def RMSD(list1, list2):
+    #
+    # Third, if here, calculate the max RMSD for m/z and intensities
+    #
 
-    """
-    @summary: Calculates RMSD for the 2 lists
+    print " Calculating maximum RMSD for m/z values and intensities ...",
+    sys.stdout.flush()
 
-    @param list1: First data set
-    @type list1: ListType
-    @param list2: Second data set
-    @type list2: ListType
-    @return: RMSD value
-    @rtype: FloatType
+    max_mass_rmsd = 0.0
+    max_intensity_rmsd = 0.0
 
-    @author: Qiao Wang
-    @author: Andrew Isaac
-    @author: Vladimir Likic
-    """
+    for ii in range(N):
+        scan1 = scan_list1[ii]
+        scan2 = scan_list2[ii]
+        mass_list1 = scan1.get_mass_list()
+        mass_list2 = scan2.get_mass_list()
+        intensity_list1 = scan1.get_intensity_list()
+        intensity_list2 = scan2.get_intensity_list()
+        mass_rmsd = rmsd(mass_list1, mass_list2)
+        if mass_rmsd > max_mass_rmsd:
+            max_mass_rmsd = mass_rmsd
+        intensity_rmsd = rmsd(intensity_list1, intensity_list2)
+        if intensity_rmsd > max_intensity_rmsd:
+            max_intensity_rmsd = intensity_rmsd
 
-    sum = 0.0
-    for i in range(len(list1)):
-        sum = sum + (list1[i] - list2[i]) ** 2
-    rmsd = math.sqrt(sum / len(list1))
-    return rmsd
+    print "\n   Max m/z RMSD: %.2e" % ( max_mass_rmsd )
+    print "   Max intensity RMSD: %.2e" % ( max_intensity_rmsd )
 
 def is_ionchromatogram(arg):
 

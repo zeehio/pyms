@@ -199,3 +199,33 @@ def std(v):
 
     return v_std
 
+
+def rmsd(list1, list2):
+
+    """
+    @summary: Calculates RMSD for the 2 lists
+
+    @param list1: First data set
+    @type list1: ListType, TupleType, or numpy.core.ndarray 
+    @param list2: Second data set
+    @type list2: ListType, TupleType, or numpy.core.ndarray 
+    @return: RMSD value
+    @rtype: FloatType
+
+    @author: Qiao Wang
+    @author: Andrew Isaac
+    @author: Vladimir Likic
+    """
+
+    if not is_list(list1):
+        error("argument neither list nor array")
+
+    if not is_list(list2):
+        error("argument neither list nor array")
+
+    sum = 0.0
+    for i in range(len(list1)):
+        sum = sum + (list1[i] - list2[i]) ** 2
+    rmsd = math.sqrt(sum / len(list1))
+    return rmsd
+
