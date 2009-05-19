@@ -405,10 +405,15 @@ class GCMS_data(object):
 
         """
         @summary: Writes the entire raw data to two files, one
-            'file_root'.I (intensities) and 'file_root'.mz (m/z
-            values.
+            'file_root'.I.csv (intensities) and 'file_root'.mz.csv
+            (m/z values).
 
-        @param file_root: The rood for the output file names
+        This method writes two CSV files, containing intentities
+        and corresponding m/z values. In general these are not
+        two-dimensional matrices, because different scans may
+        have different number of m/z values recorded.
+
+        @param file_root: The root for the output file names
         @type file_root: StringType
         
         @author: Vladimir Likic
@@ -417,8 +422,8 @@ class GCMS_data(object):
         if not is_str(file_root):
             error("'file_root' must be a string")
 
-        file_name1 = file_root + ".I"
-        file_name2 = file_root + ".mz"
+        file_name1 = file_root + ".I.csv"
+        file_name2 = file_root + ".mz.csv"
 
         print " -> Writing intensities to '%s'" % ( file_name1 )
         print " -> Writing m/z values to '%s'" % ( file_name2 )
@@ -430,15 +435,23 @@ class GCMS_data(object):
 
             scan = self.__scan_list[ii]
 
-            intensities = scan.get_intensity_list()
-            masses = scan.get_mass_list()
+            intensity_list = scan.get_intensity_list()
+            mass_list = scan.get_mass_list()
 
-            for item in intensities:
-                fp1.write("%8.4f " % (item))
+            for ii in range(len(intensity_list)):
+                v = intensity_list[ii]
+                if ii == 0:
+                    fp1.write("%.4f" % (v))
+                else:
+                    fp1.write(",%.4f" % (v))
             fp1.write("\n")
 
-            for item in masses:
-                fp2.write("%8.4f " % (item))
+            for ii in range(len(mass_list)):
+                v = mass_list[ii]
+                if ii == 0:
+                    fp2.write("%.4f" % (v))
+                else:
+                    fp2.write(",%.4f" % (v))
             fp2.write("\n")
 
         close_for_writing(fp1)
