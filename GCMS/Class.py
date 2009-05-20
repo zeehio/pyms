@@ -70,6 +70,20 @@ class GCMS_data(object):
         self.__set_min_max_mass()
         self.__calc_tic()
 
+    def __len__(self):
+
+        """
+        @summary: Returns the length of the data object,
+            defined as the number of scans
+
+        @return: Number of scans
+        @rtype: IntType
+
+        @author: Vladimir Likic
+        """
+
+        return len(self.__scan_list)
+
     def __set_time(self, time_list):
 
         """
