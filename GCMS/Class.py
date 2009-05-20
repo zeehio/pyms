@@ -670,10 +670,10 @@ class IntensityMatrix(object):
         @author: Vladimir Likic
         """
 
-        row = len(self.__intensity_matrix)
-        col = len(self.__intensity_matrix[0])
+        n_scan = len(self.__intensity_matrix)
+        n_mz = len(self.__intensity_matrix[0])
 
-        return row, col
+        return n_scan, n_mz 
 
     def get_ic_at_index(self, index):
 
