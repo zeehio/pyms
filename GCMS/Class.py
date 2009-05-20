@@ -29,9 +29,9 @@ import operator
 
 from pyms.Utils.Error import error
 from pyms.Utils.Utils import is_str, is_int, is_array, is_list, is_number
-from pyms.Utils.IO import open_for_writing, close_for_writing
+from pyms.Utils.IO import open_for_writing, close_for_writing, save_data
 from pyms.Utils.Math import mean, std, median
-from pyms.Utils.Time import time_str_secs 
+from pyms.Utils.Time import time_str_secs
 
 class GCMS_data(object):
 
@@ -100,8 +100,8 @@ class GCMS_data(object):
         time_diff_list = []
 
         for ii in range(len(time_list)-1):
-            t1 = time_list[ii] 
-            t2 = time_list[ii+1] 
+            t1 = time_list[ii]
+            t2 = time_list[ii+1]
             if not t2 > t1:
                 error("problem with retention times detected")
             time_diff = t2 - t1
@@ -319,13 +319,13 @@ class GCMS_data(object):
     def trim(self, begin=None, end=None):
 
         """
-        @summary: trims data in the time domain 
+        @summary: trims data in the time domain
 
         @param begin: begin parameter designating start time or
-            scan number 
+            scan number
         @type begin: IntType or StrType
         @param end: end parameter designating start time or
-            scan number 
+            scan number
         @type end: IntType or StrType
 
         The arguments 'begin' and 'end' can be either integers
@@ -429,7 +429,7 @@ class GCMS_data(object):
 
         @param file_root: The root for the output file names
         @type file_root: StringType
-        
+
         @author: Vladimir Likic
         """
 
@@ -957,7 +957,7 @@ class IntensityMatrix(object):
                 mass_dict[ix] = self.__mass_list[ix]
 
             # limit to first N intensities
-            top_index_list = []            
+            top_index_list = []
 
             cntr = 0
 
@@ -969,10 +969,10 @@ class IntensityMatrix(object):
                 mass_ok = True
 
                 for ix in top_index_list:
-                   ix_mass = mass_dict[ix] 
+                   ix_mass = mass_dict[ix]
                    if math.fabs(ix_crnt_mass - ix_mass) < min_mz_diff:
                        mass_ok = False
- 
+
                 if mass_ok:
                     top_index_list.append(ix_crnt)
 
@@ -989,7 +989,97 @@ class IntensityMatrix(object):
                     intensity_list_new.append(0.0)
 
             self.__intensity_matrix[ii] = intensity_list_new
- 
+
+    def export_csv(self, root_name):
+
+        """
+        @summary: Exports data to the CSV format
+
+        Calling export_csv("NAME") will create NAME.im.csv, NAME.rt.csv,
+        and NAME.mz.csv where these are the intensity matrix, retention
+        time vector, and m/z vector.
+
+        @param root_name: Root name for the output files
+        @type root_name: StringType
+
+        @return: none
+        @rtype: NoneType
+
+        @author: Milica Ng
+        @author: Andrew Isaac
+        """
+
+        if not is_str(root_name):
+            error("'root_name' is not a string")
+
+        # export 2D matrix of intensities into CSV format
+        vals = self.__intensity_matrix
+        save_data(root_name+'.im.csv', vals, sep=",")
+
+        # export 1D vector of m/z's, corresponding to rows of
+        # the intensity matrix, into CSV format
+        mass_list = self.__mass_list
+        save_data(root_name+'.mz.csv', mass_list, sep=",")
+
+        # export 1D vector of retention times, corresponding to
+        # columns of the intensity matrix, into CSV format
+        time_list = self.__time_list
+        save_data(root_name+'.rt.csv', time_list, sep=",")
+
+    def export_leco_csv(self, file_name):
+
+        """
+        @summary: Exports data in LECO CSV format
+
+        @param file_name: File name
+        @type file_name: StringType
+
+        @return: none
+        @rtype: NoneType
+
+        @author: Andrew Isaac
+        @author: Vladimir Likic
+        """
+
+        if not is_str(file_name):
+            error("'file_name' is not a string")
+
+        mass_list = self.__mass_list
+        time_list = self.__time_list
+        vals = self.__intensity_matrix
+
+        fp = open_for_writing(file_name)
+
+        # Format is text header with:
+        # "Scan","Time",...
+        # and the rest is "TIC" or m/z as text, i.e. "50","51"...
+        # The following lines are:
+        # scan_number,time,value,value,...
+        # scan_number is an int, rest seem to be fixed format floats.  The
+        # format
+        # is 0.000000e+000
+
+        # write header
+        fp.write("\"Scan\",\"Time\"")
+        for ii in mass_list:
+            if is_number(ii):
+                fp.write(",\"%d\"" % int(ii))
+            else:
+                error("mass list datum not a number")
+        fp.write("\r\n")  # windows CR/LF
+
+        # write lines
+        for ii in range(len(time_list)):
+            fp.write("%s,%#.6e" % (ii, time_list[ii]))
+            for jj in range(len(vals[ii])):
+                if is_number(vals[ii][jj]):
+                    fp.write(",%#.6e" % (vals[ii][jj]))
+                else:
+                    error("datum not a number")
+            fp.write("\r\n")
+
+        close_for_writing(fp)
+
 ## get_ms_at_time()
 
 class IonChromatogram(object):
