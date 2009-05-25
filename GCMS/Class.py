@@ -675,12 +675,41 @@ class IntensityMatrix(object):
 
         return n_scan, n_mz 
 
+    def set_ic_at_index(self, index, ic):
+
+        """
+        @summary: Sets the ion chromatogram in a data matrix to a new 
+            value
+
+        @param index: Index of an ion chromatogram in the intensity data
+            matrix to be set
+        @type index: IntType
+        @param ic: Ion chromatogram that will be copied at position 'index'
+            in the data matrix
+        @type: IonChromatogram
+
+        @author: Vladimir Likic
+        """
+
+        ia = ic.get_intensity_array()
+
+        if len(ia) != len(self.__intensity_matrix):
+            error("ion chromatogram incompatible with the intensity matrix")
+        else:
+           N = len(ia)
+
+        index = int(index)
+
+        for i in range(N):
+            self.__intensity_matrix[i][index] = ia[i]
+
     def get_ic_at_index(self, index):
 
         """
         @summary: Returns the ion chromatogram at the specified index
 
-        @param index: Index of an ion chromatogram in the intensity data matrix
+        @param index: Index of an ion chromatogram in the intensity data
+            matrix
         @type index: IntType
 
         @return: Ion chromatogram at given index
