@@ -171,7 +171,8 @@ class GCMS_data(object):
     def get_index_at_time(self, time):
 
         """
-        @summary: Returns the nearest index corresponding to the given time
+        @summary: Returns the nearest index corresponding to the given
+            time
 
         @param time: Time in seconds
         @type time: FloatType
@@ -675,21 +676,27 @@ class IntensityMatrix(object):
 
         return n_scan, n_mz 
 
-    def set_ic_at_index(self, index, ic):
+    def set_ic_at_index(self, ix, ic):
 
         """
-        @summary: Sets the ion chromatogram in a data matrix to a new 
+        @summary: Sets the ion chromatogram specified by index to a new 
             value
 
-        @param index: Index of an ion chromatogram in the intensity data
+        @param ix: Index of an ion chromatogram in the intensity data
             matrix to be set
-        @type index: IntType
-        @param ic: Ion chromatogram that will be copied at position 'index'
+        @type ix: IntType
+        @param ic: Ion chromatogram that will be copied at position 'ix'
             in the data matrix
         @type: IonChromatogram
 
+        The length of the ion chromatogram must match the appropriate
+        dimension of the intensity matrix.
+
         @author: Vladimir Likic
         """
+
+        if not is_int(ix):
+            error("index not an integer")
 
         ia = ic.get_intensity_array()
 
@@ -698,19 +705,17 @@ class IntensityMatrix(object):
         else:
            N = len(ia)
 
-        index = int(index)
-
         for i in range(N):
-            self.__intensity_matrix[i][index] = ia[i]
+            self.__intensity_matrix[i][ix] = ia[i]
 
-    def get_ic_at_index(self, index):
+    def get_ic_at_index(self, ix):
 
         """
         @summary: Returns the ion chromatogram at the specified index
 
-        @param index: Index of an ion chromatogram in the intensity data
+        @param ix: Index of an ion chromatogram in the intensity data
             matrix
-        @type index: IntType
+        @type ix: IntType
 
         @return: Ion chromatogram at given index
         @rtype: IonChromatogram
@@ -720,16 +725,18 @@ class IntensityMatrix(object):
         @author: Vladimir Likic
         """
 
-        index = int(index)
+        if not is_int(ix):
+            error("index not an integer")
+
         try:
             ia = []
             for i in range(len(self.__intensity_matrix)):
-                ia.append(self.__intensity_matrix[i][index])
+                ia.append(self.__intensity_matrix[i][ix])
         except IndexError:
             error("index out of bounds.")
 
         ia = numpy.array(ia)
-        mass = self.get_mass_at_index(index)
+        mass = self.get_mass_at_index(ix)
         rt = copy.deepcopy(self.__time_list)
 
         return IonChromatogram(ia, rt, mass)
@@ -748,6 +755,9 @@ class IntensityMatrix(object):
 
         @return: Ion chromatogram for given mass
         @rtype: IonChromatogram
+
+        @author: Andrew Isaac
+        @author: Vladimir Likic
         """
 
         if mass == None:
@@ -756,8 +766,8 @@ class IntensityMatrix(object):
         if mass < self.__min_mass or mass > self.__max_mass:
             error("mass is out of range")
 
-        index = self.get_index_of_mass(mass)
-        return self.get_ic_at_index(index)
+        ix = self.get_index_of_mass(mass)
+        return self.get_ic_at_index(ix)
 
     def get_mass_list(self):
 
@@ -774,13 +784,13 @@ class IntensityMatrix(object):
 
         return copy.deepcopy(self.__mass_list)
 
-    def get_ms_at_index(self, index):
+    def get_ms_at_index(self, ix):
 
         """
         @summary: Returns a mass spectrum for a given scan index
 
-        @param index: The index of the scan
-        @type index: IntType
+        @param ix: The index of the scan
+        @type ix: IntType
 
         @return: Mass spectrum
         @rtype: pyms.GCMS.MassSpectrum
@@ -788,17 +798,20 @@ class IntensityMatrix(object):
         @author: Andrew Isaac
         """
 
-        scan = self.get_scan_at_index(index)
+        if not is_int(ix):
+            error("index not an integer")
+
+        scan = self.get_scan_at_index(ix)
 
         return MassSpectrum(self.__mass_list, scan)
 
-    def get_scan_at_index(self, index):
+    def get_scan_at_index(self, ix):
 
         """
         @summary: Returns the spectral intensities for scan index
 
-        @param index: The index of the scan
-        @type index: IntType
+        @param ix: The index of the scan
+        @type ix: IntType
 
         @return: Intensity values of scan spectra
         @rtype: ListType
@@ -806,10 +819,13 @@ class IntensityMatrix(object):
         @author: Andrew Isaac
         """
 
-        if index < 0 or index >= len(self.__intensity_matrix):
+        if not is_int(ix):
+            error("index not an integer")
+
+        if ix < 0 or ix >= len(self.__intensity_matrix):
             error("index out of range")
 
-        return copy.deepcopy(self.__intensity_matrix[index])
+        return copy.deepcopy(self.__intensity_matrix[ix])
 
     def get_min_mass(self):
 
@@ -837,13 +853,13 @@ class IntensityMatrix(object):
 
         return self.__max_mass
 
-    def get_mass_at_index(self, index):
+    def get_mass_at_index(self, ix):
 
         """
         @summary: Returns binned mass at index
 
-        @param index: Index of binned mass
-        @type index: IntType
+        @param ix: Index of binned mass
+        @type ix: IntType
 
         @return: Binned mass
         @rtype: IntType
@@ -851,16 +867,20 @@ class IntensityMatrix(object):
         @author: Andrew Isaac
         """
 
-        if index < 0 or index >= len(self.__mass_list):
+        if not is_int(ix):
+            error("index not an integer")
+
+        if ix < 0 or ix >= len(self.__mass_list):
             error("index out of range")
 
-        return self.__mass_list[index]
+        return self.__mass_list[ix]
 
     def get_index_of_mass(self, mass):
 
         """
         @summary: Returns the index of mass in the list of masses
-            The nearest binned mass to mass is used
+
+        The nearest binned mass to given mass is used.
 
         @param mass: Mass to lookup in list of masses
         @type mass: FloatType
@@ -872,13 +892,13 @@ class IntensityMatrix(object):
         """
 
         best = self.__max_mass
-        index = 0
+        ix = 0
         for i in range(len(self.__mass_list)):
             tmp = abs(self.__mass_list[i] - mass)
             if tmp < best:
                 best = tmp
-                index = i
-        return index
+                ix = i
+        return ix
 
     def get_matrix_list(self):
 
@@ -1084,9 +1104,8 @@ class IntensityMatrix(object):
         # and the rest is "TIC" or m/z as text, i.e. "50","51"...
         # The following lines are:
         # scan_number,time,value,value,...
-        # scan_number is an int, rest seem to be fixed format floats.  The
-        # format
-        # is 0.000000e+000
+        # scan_number is an int, rest seem to be fixed format floats.
+        # The format is 0.000000e+000
 
         # write header
         fp.write("\"Scan\",\"Time\"")
