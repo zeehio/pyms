@@ -269,54 +269,7 @@ class GCMS_data(object):
         tic = IonChromatogram(ia, rt)
 
         self.__tic = tic
-
-    def __scan_values(self, N, first_scan, last_scan):
-
-
-        """
-        @summary: Filters first and last scan values
-
-        @param N: Total number of scans
-        @type N: IntType
-        @param first_scan: The first scan number
-        @type first_scan: IntType
-        @param last_scan: The first scan number
-        @type last_scan: IntType
-
-        @return: A tuple first_scan, last_scan checked
-        @rtype: TupleType
-
-        @author: Vladimir Likic
-        """
-
-        if first_scan == None:
-           first_scan = 0
-        # scan is given. first check that this is sensible
-        elif not is_int(first_scan) or first_scan < 1:
-           error("first scan must be an integer > 0")
-        # adjust for python indexing
-        else:
-           first_scan = first_scan - 1
-
-        if last_scan == None:
-           last_scan = N-1
-        # scan is given. first check that this is sensible
-        elif not is_int(last_scan) or last_scan < 1:
-           error("last scan must be an integer > 0")
-        # check that last scan is not greater than the number of scans,
-        # and if ok adjust for python indexing
-        else:
-           if last_scan > N:
-               error("last scan greater than max number of scans (%d)" % (N))
-           else:
-               last_scan = last_scan - 1
-
-        # last_scan can be equal to first_scan, but not greater
-        if last_scan < first_scan:
-           error("last scan cannot be greater than first scan")
-
-        return first_scan, last_scan
-
+  
     def trim(self, begin=None, end=None):
 
         """
@@ -344,26 +297,37 @@ class GCMS_data(object):
         if begin == None and end == None:
             print "Nothing to do."
             return # exit immediately
-        # trim called with integer arguments
-        elif is_int(begin) and is_int(end):
-            first_scan = begin
-            last_scan = end
-        # trim called with time strings as arguments
-        elif is_str(begin) and is_str(end):
-            start_rt = time_str_secs(begin)
-            end_rt = time_str_secs(end)
-            # get index and pretend that scan numbers counting
-            # from 1 were given, to be consistent with manually
-            # given scan numbers
-            first_scan = self.get_index_at_time(start_rt) + 1
-            last_scan = self.get_index_at_time(end_rt) + 1
-        else:
-            error("invalid 'begin' and 'end' arguments")
 
-        # get the first and last scans for trimming
-        N = len(self.__scan_list)
-        # sanity check and reduce scan numbers to python indices
-        first_scan, last_scan = self.__scan_values(N, first_scan, last_scan)
+        N = len(self.__scan_list) 
+
+        # process 'begin' and 'end'
+        if begin == None:
+            first_scan = 0
+        elif is_int(begin):
+            first_scan = begin-1
+        elif is_str(begin):
+            time = time_str_secs(begin)
+            first_scan = self.get_index_at_time(time) + 1
+        else:
+            error("invalid 'begin' argument")
+
+        if end == None:
+            last_scan = N-1
+        elif is_int(end):
+            last_scan = end
+        elif is_str(end):
+            time = time_str_secs(end)
+            last_scan = self.get_index_at_time(time) + 1
+        else:
+            error("invalid 'end' argument")
+
+        # sanity checks
+        if not last_scan > first_scan:
+            error("last scan=%d, first scan=%d" % (last_scan, first_scan))
+        elif first_scan < 0: 
+            error("scan number must be greater than one")
+        elif last_scan > N-1:
+            error("last scan=%d, total number of scans=%d" % (last_scan, N))
 
         print "Trimming data to between %d and %d scans" % \
                 (first_scan+1, last_scan+1)
