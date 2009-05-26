@@ -269,7 +269,7 @@ class GCMS_data(object):
         tic = IonChromatogram(ia, rt)
 
         self.__tic = tic
-  
+
     def trim(self, begin=None, end=None):
 
         """
@@ -298,7 +298,7 @@ class GCMS_data(object):
             print "Nothing to do."
             return # exit immediately
 
-        N = len(self.__scan_list) 
+        N = len(self.__scan_list)
 
         # process 'begin' and 'end'
         if begin == None:
@@ -324,7 +324,7 @@ class GCMS_data(object):
         # sanity checks
         if not last_scan > first_scan:
             error("last scan=%d, first scan=%d" % (last_scan, first_scan))
-        elif first_scan < 0: 
+        elif first_scan < 0:
             error("scan number must be greater than one")
         elif last_scan > N-1:
             error("last scan=%d, total number of scans=%d" % (last_scan, N))
@@ -638,12 +638,12 @@ class IntensityMatrix(object):
         n_scan = len(self.__intensity_matrix)
         n_mz = len(self.__intensity_matrix[0])
 
-        return n_scan, n_mz 
+        return n_scan, n_mz
 
     def set_ic_at_index(self, ix, ic):
 
         """
-        @summary: Sets the ion chromatogram specified by index to a new 
+        @summary: Sets the ion chromatogram specified by index to a new
             value
 
         @param ix: Index of an ion chromatogram in the intensity data
@@ -1410,8 +1410,8 @@ class MassSpectrum(object):
         if not is_list(intensity_list) or \
            not is_number(intensity_list[0]):
             error("'intensity_list' must be a list of numbers")
-        if not len(mass_list) == len(intensity_matrix):
-            error("'mass_list' is not the same size as 'intensity_matrix'")
+        if not len(mass_list) == len(intensity_list):
+            error("'mass_list' is not the same size as 'intensity_list'")
 
         #TODO: should these be public, or accessed through methods???
         self.mass_list = mass_list

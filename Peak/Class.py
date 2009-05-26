@@ -24,7 +24,7 @@ Provides a class to model signal peak
 
 import math
 
-from pyms.GCMS.Class import IntensityMatrix
+from pyms.GCMS.Class import IntensityMatrix, MassSpectrum
 from pyms.Utils.Error import error
 from pyms.Utils.Utils import is_int, is_number, is_list, is_boolean, is_str
 from pyms.Utils.IO import open_for_writing, close_for_writing
@@ -35,19 +35,20 @@ class Peak:
     @summary: Models a signal peak
 
     A signal peak object
-    A peak object is initialised with retention time and raw peak area.
+    A peak object is initialised with retention time and
+    Either an ion mass, a mass spectrum or None
 
     @author: Vladimir Likic
     @author: Andrew Isaac
     """
 
-    def __init__(self, rt=0.0, raw_area=0, minutes=False):
+    def __init__(self, rt=0.0, ms=None, minutes=False):
 
         """
         @param rt: Retention time
-        @type rt: A number
-        @param raw_area: Raw peak area
-        @type raw_area: A number
+        @type rt: FloatType
+        @param ms: A ion mass, or spectra of maximising ions
+        @type ms: FloatType, pyms.GCSM.MassSpectrum
         @param minutes: Retention time units flag. If True, retention time
             is in minutes; if Flase retention time is in seconds
         @type minutes: BooleanType
@@ -56,28 +57,29 @@ class Peak:
         if not is_number(rt):
             error("'rt' must be a number")
 
-        if not is_number(raw_area):
-            error("'raw_area' must be a number")
+        if not ms == None and \
+            not isinstance(ms, MassSpectrum) and \
+            not is_number(ms):
+            error("'ms' must be a Float or a MassSpectrum object")
 
         if minutes:
             rt = rt*60.0
 
         # basic peak attributes
-        self.rt = float(rt)
-        self.raw_area = float(raw_area)
-        self.norm_area = None
+        self.__rt = float(rt)
+        if not ms == None:
+            if isinstance(ms, MassSpectrum):
+                # mass spectrum
+                self.__mass_spectrum = ms
+                self.__ic_mass = None
+            else:
+                # single ion chromatogram properties
+                self.__ic_mass = ms
+                self.__mass_spectrum = None
 
-        self.tag = None
-
-##TODO: should attributes be private?
-        # single ion chromatogram properties
-        self.__ic_mass = None
-
-        # these three attributes are required for
+        # these two attributes are required for
         # setting the peak mass spectrum
-        self.pt_bounds = None
-        self.mass_spectrum = None
-        self.mass_list = None
+        self.__pt_bounds = None
 
     def set_pt_bounds(self, pt_bounds):
 
@@ -102,9 +104,9 @@ class Peak:
                 if not is_int(item):
                     error("'pt_bounds' element not an integer")
 
-        self.pt_bounds = pt_bounds
+        self.__pt_bounds = pt_bounds
 
-    def set_ic_mass(self, mz=None):
+    def set_ic_mass(self, mz):
 
         """
         @summary: Sets the mass for a single ion chromatogram peak
@@ -121,7 +123,27 @@ class Peak:
             error("'mz' must be a number")
         self.__ic_mass = mz
         # clear mass spectrum
-        self.mass_spectrum = None
+        self.__mass_spectrum = None
+
+    def set_mass_spectrum(self, ms):
+
+        """
+        @summary: Sets the mass spectrum
+            Clears the mass for a single ion chromatogram peak
+
+        @param mz: The mass spectrum at the apex of the peak
+        @type mz: MassSpectrum
+
+        @return: none
+        @rtype: NoneType
+        """
+
+        if not isinstance(ms, MassSpectrum):
+            error("'ms' must be a MassSpectrum object")
+
+        self.__mass_spectrum = ms
+        # clear ion mass
+        self.__ic_mass = None
 
     def get_ic_mass(self):
 
@@ -134,10 +156,21 @@ class Peak:
 
         return self.__ic_mass
 
-    def set_mass_spectrum(self, data, from_bounds=False):
+    def get_mass_spectrum(self):
 
         """
-        @summary: Sets peak mass spectrum
+        @summary: Gets the mass for a single ion chromatogram peak
+
+        @return: The mass of the single ion chromatogram that the peak is from
+        @rtype: FloatType or IntType
+        """
+
+        return self.__mass_spectrum
+
+    def find_mass_spectrum(self, data, from_bounds=False):
+
+        """
+        @summary: Sets peak mass spectrum from the data
             Clears the single ion chromatogram mass
 
         @param data: An IntensityMatrix object
@@ -158,123 +191,16 @@ class Peak:
             error("'from_bounds' must be boolean")
 
         if from_bounds:
-            if self.pt_bounds == None:
+            if self.__pt_bounds == None:
                 error("pt_bounds not set for this peak")
             else:
-                pt_apex = self.pt_bounds[1]
+                pt_apex = self.__pt_bounds[1]
         else:
             # get the index of peak apex from peak retention time
-            pt_apex = data.get_index_at_time(self.rt)
+            pt_apex = data.get_index_at_time(self.__rt)
 
         # set the mass spectrum
-        self.mass_spectrum = data.get_scan_at_index(pt_apex)
+        self.__mass_spectrum = data.get_ms_at_index(pt_apex)
 
-        # set mass list for this peak
-        self.mass_list = data.get_mass_list()
-
-        # 'mass_spectrum' and 'mass_list' must be consistent.
-        if not (len(self.mass_spectrum) == len(self.mass_list)):
-            error("mass spectrum data inconsistent")
         # clear single ion chromatogram mass
         self.__ic_mass = None
-
-    def crop_mass_spectrum(self, mass_min, mass_max, verbose=False):
-
-        """
-        @summary: Crops mass spectrum
-
-        @param mass_min: Minimum mass value
-        @type mass_min: IntType or FloatType
-        @param mass_max: Maximum mass value
-        @type mass_max: IntType or FloatType
-        @param verbose: A verbose flag
-        @type verbose: BooleanType
-
-        @return: none
-        @rtype: NoneType
-        """
-
-        if self.mass_spectrum == None:
-            error("mass spectrum not set for this peak")
-
-        if not is_number(mass_min) or not is_number(mass_max):
-            error("'mass_min' and 'mass_max' must be numbers")
-
-        new_mass_list = []
-        new_mass_spectrum = []
-
-        for ii in range(len(self.mass_list)):
-
-            mass = self.mass_list[ii]
-            intensity =  self.mass_spectrum[ii]
-
-            if mass >= mass_min and mass <= mass_max:
-                new_mass_list.append(mass)
-                new_mass_spectrum.append(intensity)
-
-        self.mass_list = new_mass_list
-        self.mass_spectrum = new_mass_spectrum
-
-        if len(new_mass_list) == 0:
-            error("mass spectrum empty")
-        elif len(new_mass_list) < 10:
-            print " WARNING: peak mass spectrum contains < 10 points"
-
-        if verbose:
-            print " [ Mass spectrum cropped to %d points:" % \
-                    (len(new_mass_list)),
-            print "masses %d to %d ]" % (min(new_mass_list),
-                    max(new_mass_list))
-
-    def set_peak_tag(self, tag):
-
-        """
-        @summary: Sets the peak tag
-
-        @param tag: The supplied peak tag must be either "BLANK" or RF-type
-            tag for a reference peak (for example, "RF-SI")
-        @type tag: StringType
-
-        @return: none
-        @rtype: NoneType
-        """
-
-        peak_tag = None
-
-        if tag != None:
-            if tag[:3] == "rf-" and tag[3:] != "":
-                peak_tag = tag
-            elif tag == "blank":
-                peak_tag = tag
-            else:
-                error("incorrect reference peak tag '%s'" % (tag))
-
-        self.tag = peak_tag
-
-    def write_mass_spectrum(self, file_name):
-
-        """
-        @summary: Writes the peak mass spectrum to a file
-
-        @param file_name: File for writing the mass spectrum
-        @type file_name: StringType
-
-        @return: none
-        @rtype: NoneType
-        """
-
-        if self.mass_spectrum == None:
-            error("mass spectrum for this peak not set")
-
-        if not is_str(file_name):
-            error("'file_name' must be a string")
-
-        fp = open_for_writing(file_name)
-
-        for ix in range(len(self.mass_list)):
-
-            fp.write("%8.3f %16.3f\n" % (self.mass_list[ix], \
-                    self.mass_spectrum[ix]))
-
-        close_for_writing(fp)
-

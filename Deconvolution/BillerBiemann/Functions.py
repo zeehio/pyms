@@ -27,7 +27,8 @@ import numpy
 
 from pyms.Utils.Error import error
 from pyms.Utils.Utils import is_list, is_number, is_int
-from pyms.GCMS.Class import IonChromatogram
+from pyms.GCMS.Class import IonChromatogram, MassSpectrum
+from pyms.Peak.Class import Peak
 
 #######################
 # structure
@@ -36,7 +37,7 @@ from pyms.GCMS.Class import IonChromatogram
 # 3) sum ions belonging to each maxima scan
 #######################
 
-def BillerBiemann(im, window=1):
+def BillerBiemann(im):
 
     """
     @summary: BillerBiemann Deconvolution
@@ -45,19 +46,41 @@ def BillerBiemann(im, window=1):
 
     @param ic: An IonChromatogram object
     @type ic: pyms.Peak.List.Class.Alignment
-    @param noise: A number. The noise estimate
-    @type noise: FloatType
-    @param window: A string. The width of the window for peak
-        detection specified as <NUMBER>s or <NUMBER>m, giving a time
-        in seconds or minutes, respectively
-    @type window: StringType
-    @param peak_factor: A number. The value that is multipled to the
-        noise level to determine the peak threshold for minimum peak
-        intensities
-    @type peak_factor: IntType
 
-    @return: A list.
+    @return: List of Peak objects
     @rtype: ListType
+
+
+    @author: Andrew Isaac
+    """
+
+    rt_list = im.get_time_list()
+    mass_list = im.get_mass_list()
+    peak_list = []
+    maxima_im = get_maxima_matrix(im)
+    numrows = len(maxima_im)
+    for row in range(numrows):
+        rt = rt_list[row]
+        ms = MassSpectrum(mass_list, maxima_im[row])
+        peak = Peak(rt, ms)
+        peak_list.append(peak)
+# TODO:
+# threshold peaks
+    return peak_list
+
+def sum_maxima(im, window=1):
+
+    """
+    @summary: Reconstruct the TIC as sum of maxima
+
+    @param ic: An IonChromatogram object
+    @type ic: pyms.Peak.List.Class.Alignment
+
+    @param window: The number of points to use as one scan
+    @type window: IntType
+
+    @return: The reconstructed TIC
+    @rtype: pyms.GCMS.IonChromatogram
 
     @author: Andrew Isaac
     """
@@ -75,6 +98,7 @@ def BillerBiemann(im, window=1):
     tic = IonChromatogram(numpy.array(sums), im.get_time_list())
 
     return tic
+
 
 def get_maxima_indices(ion_intensities):
 
@@ -121,8 +145,6 @@ def get_maxima_list(ic):
 def get_maxima_matrix(im):
     numrows, numcols = im.get_size()
     # zeroed matrix, size numrows*numcols
-    # bad initialisation!! makes numrows copy of the same row!!!
-    # maxima_im = [[0]*numcols]*numrows
     maxima_im = numpy.zeros((numrows, numcols))
     raw_im = numpy.array(im.get_matrix_list())
 
