@@ -145,6 +145,17 @@ class Peak:
         # clear ion mass
         self.__ic_mass = None
 
+    def get_rt(self):
+
+        """
+        @summary: Return the retention time
+
+        @return: Retention time
+        @rtype: FloatType
+        """
+
+        return self.__rt
+
     def get_ic_mass(self):
 
         """

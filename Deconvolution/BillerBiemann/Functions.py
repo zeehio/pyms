@@ -24,6 +24,7 @@ Provides a class to perform Biller and Biemann deconvolution
  #############################################################################
 
 import numpy
+import copy
 
 from pyms.Utils.Error import error
 from pyms.Utils.Utils import is_list, is_number, is_int
@@ -37,19 +38,23 @@ from pyms.Peak.Class import Peak
 # 3) sum ions belonging to each maxima scan
 #######################
 
-def BillerBiemann(im):
+def BillerBiemann(im, points=3, scans=1):
 
     """
     @summary: BillerBiemann Deconvolution
 
         Deconvolution based on the algorithm of Biller and Biemann (1974)
 
-    @param ic: An IonChromatogram object
-    @type ic: pyms.Peak.List.Class.Alignment
+    @param im: An IntensityMatrix object
+    @type im: pyms.GCMS.IntensityMatrix
+    @param points: Peak if maxima over 'points' number of scans (Default 3)
+    @type points: IntType
+    @param scans: To compensate for spectra scewing,
+        peaks from 'scans' scans are combined (Default 1)
+    @type scans: IntType
 
     @return: List of Peak objects
     @rtype: ListType
-
 
     @author: Andrew Isaac
     """
@@ -57,27 +62,94 @@ def BillerBiemann(im):
     rt_list = im.get_time_list()
     mass_list = im.get_mass_list()
     peak_list = []
-    maxima_im = get_maxima_matrix(im)
+    maxima_im = get_maxima_matrix(im, points)
     numrows = len(maxima_im)
     for row in range(numrows):
         rt = rt_list[row]
         ms = MassSpectrum(mass_list, maxima_im[row])
         peak = Peak(rt, ms)
         peak_list.append(peak)
-# TODO:
-# threshold peaks
+
     return peak_list
 
-def sum_maxima(im, window=1):
+def rel_threshold(pl, percent=2):
+
+    """
+    @summary: Remove ions with relative intensities less than the given
+        relative percentage of the maximum intensity.
+
+    @param pl: A list of Peak objects
+    @type pl: ListType
+    @param percent: Threshold for relative percentage of intensity (Default 2%)
+    @type percent: FloatType
+
+    @param window: The number of points to use as one scan
+    @type window: IntType
+
+    @return: A new list of Peak objects with threshold ions
+    @rtype: ListType
+
+    @author: Andrew Isaac
+    """
+
+    pl_copy = copy.deepcopy(pl)
+    new_pl = []
+    for p in pl_copy:
+        ms = p.get_mass_spectrum()
+        ia = ms.mass_spec
+        cutoff = max(ia)/100.0*float(percent)  # assume max(ia) big so /100 1st
+        for i in range(len(ia)):
+            if ia[i] < cutoff:
+                ia[i] = 0
+        ms.mass_spec = ia
+        p.set_mass_spectrum(ms)
+        new_pl.append(p)
+    return new_pl
+
+def num_ions_threshold(pl, n, cutoff):
+
+    """
+    @summary: Remove Peaks where there are less than a given number of ion
+        intensities above the given threshold
+
+    @param pl: A list of Peak objects
+    @type pl: ListType
+    @param n: Minimum number of ions that must have intensities above the cutoff
+    @type n: IntType
+    @param cutoff: The minimum intensity threshold
+    @type cutoff: FloatType
+
+    @return: A new list of Peak objects
+    @rtype: ListType
+
+    @author: Andrew Isaac
+    """
+
+    pl_copy = copy.deepcopy(pl)
+    new_pl = []
+    for p in pl_copy:
+        ms = p.get_mass_spectrum()
+        ia = ms.mass_spec
+        ions = 0
+        for i in range(len(ia)):
+            if ia[i] >= cutoff:
+                ions += 1
+        if ions >= n:
+            new_pl.append(p)
+    return new_pl
+
+def sum_maxima(im, points=3, scans=1):
 
     """
     @summary: Reconstruct the TIC as sum of maxima
 
-    @param ic: An IonChromatogram object
-    @type ic: pyms.Peak.List.Class.Alignment
-
-    @param window: The number of points to use as one scan
-    @type window: IntType
+    @param im: An IntensityMatrix object
+    @type im: pyms.GCMS.IntensityMatrix
+    @param points: Peak if maxima over 'points' number of scans
+    @type points: IntType
+    @param scans: To compensate for spectra scewing,
+        peaks from 'scans' scans are combined.
+    @type scans: IntType
 
     @return: The reconstructed TIC
     @rtype: pyms.GCMS.IonChromatogram
@@ -85,13 +157,13 @@ def sum_maxima(im, window=1):
     @author: Andrew Isaac
     """
 
-    maxima_im = get_maxima_matrix(im)
+    maxima_im = get_maxima_matrix(im, points)
     sums = []
     numrows = len(maxima_im)
-    half = int(window/2)
+    half = int(scans/2)
     for row in range(numrows):
         val = 0
-        for ii in range(window):
+        for ii in range(scans):
             if row - half + ii >= 0 and row - half + ii < numrows:
                 val += maxima_im[row - half + ii].sum()
         sums.append(val)
@@ -99,42 +171,70 @@ def sum_maxima(im, window=1):
 
     return tic
 
+def get_maxima_indices(ion_intensities, points=3):
 
-def get_maxima_indices(ion_intensities):
+    """
+    @summary: Find local maxima.
 
-#    if not is_list(ion_intensities) or not is_number(ion_intensities[0]):
-#        error("'ion_intensities' must be a List of numbers")
+    @param ion_intensities: A list of intensities for a single ion
+    @type ion_intensities: ListType
+    @param points: Peak if maxima over 'points' number of scans
+    @type points: IntType
 
-##TODO: what is tolerance on floating point comparison?
+    @return: A list of scan indices
+    @rtype: ListType
+
+    @author: Andrew Isaac
+    """
+
+    if not is_list(ion_intensities) or not is_number(ion_intensities[0]):
+        error("'ion_intensities' must be a List of numbers")
 
     # find peak inflection points
-    # use a 3 point window
+    # use a 'points' point window
     # for a plateau after a rise, need to check if it is the left edge of
     # a peak
     peak_point = []
     edge = -1
-    for index in range(len(ion_intensities)-2):
-        left = ion_intensities[index]
-        mid = ion_intensities[index+1]
-        right = ion_intensities[index+2]
+    half = int(points/2)
+    points = 2*half+1  # ensure odd number of points
+    for index in range(len(ion_intensities)-points+1):
+        left = ion_intensities[index:index+half]
+        mid = ion_intensities[index+half]
+        right = ion_intensities[index+half+1:index+points]
         # max in middle
-        if mid > left and mid > right:
-            peak_point.append(index+1)
+        if mid > max(left) and mid > max(right):
+            peak_point.append(index+half)
             edge = -1  # ignore previous rising edge
         # flat from rise (left of peak?)
-        if mid > left and mid == right:
-            edge = index+1  # ignore previous rising edge, update latest
+        if mid > max(left) and mid == max(right):
+            edge = index+half  # ignore previous rising edge, update latest
         # fall from flat
-        if mid == left and mid > right:
+        if mid == max(left) and mid > max(right):
             if edge > -1:
-                centre = (edge+index+1)/2  # mid point
+                centre = int((edge+index+half)/2)  # mid point
                 peak_point.append(centre)
             edge = -1
 
     return peak_point
 
-def get_maxima_list(ic):
-    peak_point = get_maxima_indices(ic.get_intensity_array())
+def get_maxima_list(ic, points=3):
+
+    """
+    @summary: List of retention time and intensity of local maxima for ion
+
+    @param ic: An IonChromatogram object
+    @type ic: pyms.GCMS.IonChromatogram
+    @param points: Peak if maxima over 'points' number of scans
+    @type points: IntType
+
+    @return: A list of retention time and intensity of local maxima for ion
+    @rtype: ListType
+
+    @author: Andrew Isaac
+    """
+
+    peak_point = get_maxima_indices(ic.get_intensity_array(), points)
     mlist = []
     for index in range(len(peak_point)):
         rt = ic.get_time_at_index(peak_point[index])
@@ -142,7 +242,22 @@ def get_maxima_list(ic):
         mlist.append([rt, intens])
     return mlist
 
-def get_maxima_matrix(im):
+def get_maxima_matrix(im, points=3):
+
+    """
+    @summary: Get matrix of local maxima for each ion
+
+    @param im: A list of intensities for a single ion
+    @type im: ListType
+    @param points: Peak if maxima over 'points' number of scans
+    @type points: IntType
+
+    @return: A matrix of each ion and scan and intensity at ion peaks
+    @rtype: ListType
+
+    @author: Andrew Isaac
+    """
+
     numrows, numcols = im.get_size()
     # zeroed matrix, size numrows*numcols
     maxima_im = numpy.zeros((numrows, numcols))
@@ -150,7 +265,7 @@ def get_maxima_matrix(im):
 
     for col in range(numcols):  # assume all rows have same width
         # 1st, find maxima
-        maxima = get_maxima_indices(raw_im[:,col])
+        maxima = get_maxima_indices(raw_im[:,col], points)
         # 2nd, fill intensities
         for row in maxima:
             maxima_im[row, col] = raw_im[row, col]
