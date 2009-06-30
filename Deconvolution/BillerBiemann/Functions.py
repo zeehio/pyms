@@ -50,7 +50,7 @@ def BillerBiemann(im, points=3, scans=1):
     @param points: Peak if maxima over 'points' number of scans (Default 3)
     @type points: IntType
     @param scans: To compensate for spectra scewing,
-        peaks from 'scans' scans are combined (Default 1)
+        peaks from 'scans' scans are combined (Default 1).
     @type scans: IntType
 
     @return: List of Peak objects
@@ -62,7 +62,7 @@ def BillerBiemann(im, points=3, scans=1):
     rt_list = im.get_time_list()
     mass_list = im.get_mass_list()
     peak_list = []
-    maxima_im = get_maxima_matrix(im, points)
+    maxima_im = get_maxima_matrix(im, points, scans)
     numrows = len(maxima_im)
     for row in range(numrows):
         rt = rt_list[row]
@@ -242,7 +242,7 @@ def get_maxima_list(ic, points=3):
         mlist.append([rt, intens])
     return mlist
 
-def get_maxima_matrix(im, points=3):
+def get_maxima_matrix(im, points=3, scans=1):
 
     """
     @summary: Get matrix of local maxima for each ion
@@ -251,6 +251,9 @@ def get_maxima_matrix(im, points=3):
     @type im: ListType
     @param points: Peak if maxima over 'points' number of scans
     @type points: IntType
+    @param scans: To compensate for spectra scewing,
+        peaks from 'scans' scans are combined (Default 1).
+    @type scans: IntType
 
     @return: A matrix of each ion and scan and intensity at ion peaks
     @rtype: ListType
@@ -269,5 +272,27 @@ def get_maxima_matrix(im, points=3):
         # 2nd, fill intensities
         for row in maxima:
             maxima_im[row, col] = raw_im[row, col]
+
+    # combine spectra within 'scans' scans.
+    half = int(scans/2)
+    for row in range(numrows):
+        tic = 0
+        best = 0
+        loc = 0
+        # find best in scans
+        for ii in range(scans):
+            if row - half + ii >= 0 and row - half + ii < numrows:
+                tic = maxima_im[row - half + ii].sum()
+                # find largest tic of scans
+                if tic > best:
+                    best = tic
+                    loc = ii
+        # move and add others to best
+        for ii in range(scans):
+            if row - half + ii >= 0 and row - half + ii < numrows and ii != loc:
+                for col in range(numcols):
+                    maxima_im[row - half + loc, col] += \
+                        maxima_im[row - half + ii, col]
+                    maxima_im[row - half + ii, col] = 0
 
     return maxima_im
