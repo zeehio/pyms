@@ -928,23 +928,14 @@ class IntensityMatrix(object):
 
         return ix_match
 
-    def reduce_mass_spectra(self, N=5, min_mz_diff=1.5):
+    def reduce_mass_spectra(self, N=5):
 
         """
         @summary: Reduces mass spectra by retaining top N
-        intensities, and discarding all other intensities.
+        intensities, discarding all other intensities.
 
         @param N: The number of top intensities to keep
         @type N: IntType
-        @param min_mz_diff: The minimum difference in m/z
-            required to keep the intensity. For example,
-            if two m/z values with greater intensity are
-            77.0 and 78.0, and min_mz_diff=1.5, the intensity
-            for for m/z=77 will be discarded.
-        @type min_mz_diff: FloatType
-
-        @return: Does not return a value, changes the variable
-            self.__intensity_matrix
 
         @author: Vladimir Likic
         """
@@ -952,54 +943,22 @@ class IntensityMatrix(object):
         # loop over all mass spectral scans
         for ii in range(len(self.__intensity_matrix)):
 
-            # get next mass spectrum
+            # get the next mass spectrum as list of intensities
             intensity_list = self.__intensity_matrix[ii]
+            n = len(intensity_list)
 
-            # sort mass spectrum intensities
-            tmp_list = sorted(enumerate(intensity_list), key=operator.itemgetter(1))
-            tmp_list.reverse()
+            # get the indices of top N intensities
+            top_indices = range(n)
+            top_indices.sort(key=lambda i: intensity_list[i], reverse=True)
+            top_indices = top_indices[:N]
 
-            # a sorted list of indices and associated dictionary of intensities
-            index_list = []
-            intensity_dict = {}
-            mass_dict = {}
-            for item in tmp_list:
-                ix = item[0]
-                index_list.append(ix)
-                intensity_dict[ix] = intensity_list[ix]
-                mass_dict[ix] = self.__mass_list[ix]
+            # initiate new mass spectrum, and retain only top N intensities
+            intensity_list_new = [] 
 
-            # limit to first N intensities
-            top_index_list = []
-
-            cntr = 0
-
-            while len(top_index_list) < N:
-
-                ix_crnt = index_list[cntr]
-                ix_crnt_mass  = mass_dict[ix_crnt]
-
-                mass_ok = True
-
-                for ix in top_index_list:
-                   ix_mass = mass_dict[ix]
-                   if math.fabs(ix_crnt_mass - ix_mass) < min_mz_diff:
-                       mass_ok = False
-
-                if mass_ok:
-                    top_index_list.append(ix_crnt)
-
-                cntr = cntr + 1
-
-            # build a cleaned up mass spectrum
-            N = len(intensity_list)
-            intensity_list_new = []
-
-            for jj in range(N):
-                if jj in top_index_list:
-                    intensity_list_new.append(intensity_dict[jj])
-                else:
-                    intensity_list_new.append(0.0)
+            for jj in range(n):
+                intensity_list_new.append(0.0)
+                if jj in top_indices: 
+                    intensity_list_new[jj] = intensity_list[jj]
 
             self.__intensity_matrix[ii] = intensity_list_new
 
