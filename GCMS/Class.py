@@ -387,7 +387,7 @@ class GCMS_data(object):
             'file_root'.I.csv (intensities) and 'file_root'.mz.csv
             (m/z values).
 
-        This method writes two CSV files, containing intentities
+        This method writes two CSV files, containing intensities
         and corresponding m/z values. In general these are not
         two-dimensional matrices, because different scans may
         have different number of m/z values recorded.
@@ -962,14 +962,17 @@ class IntensityMatrix(object):
 
             self.__intensity_matrix[ii] = intensity_list_new
 
-    def export_csv(self, root_name):
+    def export_ascii(self, root_name, format='dat'):
 
         """
-        @summary: Exports data to the CSV format
+        @summary: Exports the intensity matrix, retention time vector, and
+        m/z vector to the ascii format
 
-        Calling export_csv("NAME") will create NAME.im.csv, NAME.rt.csv,
-        and NAME.mz.csv where these are the intensity matrix, retention
-        time vector, and m/z vector.
+        By default, export_ascii("NAME") will create NAME.im.dat, NAME.rt.dat,
+        and NAME.mz.dat where these are the intensity matrix, retention
+        time vector, and m/z vector in tab delimited format. If format='csv',
+        the files will be in the CSV format, named NAME.im.csv, NAME.rt.csv,
+        and NAME.mz.csv.
 
         @param root_name: Root name for the output files
         @type root_name: StringType
@@ -979,24 +982,34 @@ class IntensityMatrix(object):
 
         @author: Milica Ng
         @author: Andrew Isaac
+        @author: Vladimir Likic
         """
 
         if not is_str(root_name):
             error("'root_name' is not a string")
 
-        # export 2D matrix of intensities into CSV format
+        if format == 'dat':
+            separator = " "
+            extension = ".dat"
+        elif format == 'csv':
+            separator = ","
+            extension = ".csv"
+        else:
+            error("unkown format '%s'. Only 'dat' or 'csv' supported" % format)
+
+        # export 2D matrix of intensities
         vals = self.__intensity_matrix
-        save_data(root_name+'.im.csv', vals, sep=",")
+        save_data(root_name+'.im'+extension, vals, sep=separator)
 
         # export 1D vector of m/z's, corresponding to rows of
-        # the intensity matrix, into CSV format
+        # the intensity matrix
         mass_list = self.__mass_list
-        save_data(root_name+'.mz.csv', mass_list, sep=",")
+        save_data(root_name+'.mz'+extension, mass_list, sep=separator)
 
         # export 1D vector of retention times, corresponding to
-        # columns of the intensity matrix, into CSV format
+        # columns of the intensity matrix
         time_list = self.__time_list
-        save_data(root_name+'.rt.csv', time_list, sep=",")
+        save_data(root_name+'.rt'+extension, time_list, sep=separator)
 
     def export_leco_csv(self, file_name):
 
