@@ -1,5 +1,5 @@
 """
-Top-hat baseline corrector
+Functions related to storing and loading a list of Peak objects
 """
 
  #############################################################################
@@ -22,51 +22,56 @@ Top-hat baseline corrector
  #                                                                           #
  #############################################################################
 
-import copy
-import numpy
-
-from scipy import ndimage
+import string, cPickle
 
 from pyms.Utils.Error import error
-from pyms.GCMS.Function import is_ionchromatogram, ic_window_points
+from pyms.Peak.Class import Peak
+from pyms.Utils.Utils import is_str, is_list
 
-# default structural element as a fraction of total number of points
-_STRUCT_ELM_FRAC = 0.2
-
-def tophat(ic, struct=None):
+def store_peaks(peak_list, file_name):
 
     """
-    @summary: Top-hat baseline correction
+    @summary:Store the list of peak objects
 
-    @param ic: The input ion chromatogram
-    @type ic: pyms.IO.Class.IonChromatogram
-    @param struct: Top-hat structural element as time string
-    @type struct: StringType
+    @param peak_list: A list of peak objects
+    @type peak_list: pyms.Peaks.Class.Peak
+    @param file_name: File name to store peak list
+    @type file_name: StringType
 
-    @return: Top-hat corrected ion chromatogram
-    @rtype: pyms.IO.Class.IonChromatogram
-
-    @author: Woon Wai Keen
-    @author: Vladimir Likic
+    @author: Andrew Isaac
     """
 
-    if not is_ionchromatogram(ic):
-        error("'ic' not an IonChromatogram object")
-    else:
-        ia = copy.deepcopy(ic.get_intensity_array())
+    if not is_str(file_name):
+        error("'file_name' must be a string")
 
-    if struct == None:
-        struct_pts = int(round(ia.size * _STRUCT_ELM_FRAC))
-    else:
-        struct_pts = ic_window_points(ic,struct)
+    fp = open(file_name,'w')
+    cPickle.dump(peak_list, fp, 1)
+    fp.close()
 
-#    print " -> Top-hat: structural element is %d point(s)" % ( struct_pts )
+def load_peaks(file_name):
 
-    str_el = numpy.repeat([1], struct_pts)
-    ia = ndimage.white_tophat(ia, None, str_el)
+    """
+    @summary: Loads the peak_list stored with 'store_peaks'
 
-    ic_bc = copy.deepcopy(ic)
-    ic_bc.set_intensity_array(ia)
+    @param file_name: File name of peak list
+    @type file_name: StringType
 
-    return ic_bc
+    @return: The list of Peak objects
+    @rtype: ListType
 
+    @author: Andrew Isaac
+    """
+
+    if not is_str(file_name):
+        error("'file_name' not a string")
+
+    fp = open(file_name,'r')
+    peak_list = cPickle.load(fp)
+    fp.close()
+
+    if not is_list(peak_list):
+        error("'file_name' is not a List")
+    if not len(peak_list) > 0 and not isinstance(peak_list[0], Peak):
+        error("'peak_list' must be a list of Peak objects")
+
+    return peak_list

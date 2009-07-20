@@ -41,7 +41,7 @@ def window_smooth(ic, window=__DEFAULT_WINDOW, median=False):
         or time string. If integer, taken as the number of points. If a
         string, must of the form "<NUMBER>s" or "<NUMBER>m", specifying
         a time in seconds or minutes, respectively
-    @type window: IntType or StringType 
+    @type window: IntType or StringType
     @param median: An indicator whether the mean or median window smoothing
         to be used
     @type median: Booleantype
@@ -86,7 +86,7 @@ def __mean_window(ia, wing_length):
     @author: Vladimir Likic
     """
 
-    print " -> Window smoothing (mean): the wing is %d point(s)" % (wing_length)
+#print " -> Window smoothing (mean): the wing is %d point(s)" % (wing_length)
 
     ia_denoise = numpy.repeat([0], ia.size)
 
@@ -120,7 +120,7 @@ def __median_window(ia, wing_length):
     @author: Vladimir Likic
     """
 
-    print " -> Window smoothing (median): the wing is %d point(s)" % (wing_length)
+#print " -> Window smoothing (median): the wing is %d point(s)" % (wing_length)
 
     ia_denoise = numpy.repeat([0], ia.size)
 

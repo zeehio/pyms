@@ -1,5 +1,5 @@
 """
-Top-hat baseline corrector
+Models a GC-MS experiment represented by a list of signal peaks
 """
 
  #############################################################################
@@ -22,51 +22,58 @@ Top-hat baseline corrector
  #                                                                           #
  #############################################################################
 
-import copy
-import numpy
-
-from scipy import ndimage
-
 from pyms.Utils.Error import error
-from pyms.GCMS.Function import is_ionchromatogram, ic_window_points
+from pyms.Utils.Utils import is_list, is_str
+from pyms import Peak
 
-# default structural element as a fraction of total number of points
-_STRUCT_ELM_FRAC = 0.2
-
-def tophat(ic, struct=None):
+class Experiment:
 
     """
-    @summary: Top-hat baseline correction
+    @summary: Models an experiment object
 
-    @param ic: The input ion chromatogram
-    @type ic: pyms.IO.Class.IonChromatogram
-    @param struct: Top-hat structural element as time string
-    @type struct: StringType
-
-    @return: Top-hat corrected ion chromatogram
-    @rtype: pyms.IO.Class.IonChromatogram
-
-    @author: Woon Wai Keen
     @author: Vladimir Likic
+    @author: Andrew Isaac
     """
 
-    if not is_ionchromatogram(ic):
-        error("'ic' not an IonChromatogram object")
-    else:
-        ia = copy.deepcopy(ic.get_intensity_array())
+    def __init__(self, name, peak_list):
 
-    if struct == None:
-        struct_pts = int(round(ia.size * _STRUCT_ELM_FRAC))
-    else:
-        struct_pts = ic_window_points(ic,struct)
+        """
+        @summary: Models an experiment
 
-#    print " -> Top-hat: structural element is %d point(s)" % ( struct_pts )
+        @param name: Unique identifier for the experiment
+        @type name: StringType
+        @param peak_list: A list of peak objects
+        @type peak_list: ListType
+        """
 
-    str_el = numpy.repeat([1], struct_pts)
-    ia = ndimage.white_tophat(ia, None, str_el)
+        if not is_str(name):
+            error("'name' must be a string")
+        if not is_list(peak_list):
+            error("'peak_list' must be a list")
+        if not len(peak_list) > 0 and not isinstance(peak_list[0], Peak):
+            error("'peak_list' must be a list of Peak objects")
 
-    ic_bc = copy.deepcopy(ic)
-    ic_bc.set_intensity_array(ia)
+        self.__name = name
+        self.__peak_list = peak_list
 
-    return ic_bc
+    def get_name(self):
 
+        """
+        @summary: Returns the name of the experiment
+
+        @return: The name of the experiment
+        @rtype:  StringType
+        """
+
+        return self.__name
+
+    def get_peak_list(self):
+
+        """
+        @summary: Returns the peak list
+
+        @return: A list of peak objects
+        @rtype: ListType
+        """
+
+        return self.__peak_list

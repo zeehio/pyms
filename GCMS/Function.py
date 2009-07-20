@@ -30,16 +30,22 @@ from pyms.GCMS.Class import GCMS_data, IntensityMatrix, IonChromatogram
 from pyms.Utils.Time import time_str_secs
 from pyms.Utils.Math import rmsd
 
-def build_intensity_matrix(data, bin_size=1):
+def build_intensity_matrix(data, bin_interval=1, bin_left=0.5, bin_right=0.5):
 
     """
     @summary: Sets the full intensity matrix with flexible bins
 
     @param data: Raw GCMS data
-    @type bin_size: pyms.GCMS.GCMS_data
+    @type data: pyms.GCMS.GCMS_data
 
-    @param bin_size: bin size
-    @type bin_size: IntType or FloatType
+    @param bin_interval: interval between bin centres (default 1)
+    @type bin_interval: IntType or FloatType
+
+    @param bin_left: left bin boundary offset (default 0.5)
+    @type bin_left: FloatType
+
+    @param bin_right: right bin boundary offset (default 0.5)
+    @type bin_right: FloatType
 
     @return: Binned IntensityMatrix object
     @rtype: pyms.GCMS.IntensityMatrix
@@ -51,20 +57,31 @@ def build_intensity_matrix(data, bin_size=1):
 
     if not isinstance(data, GCMS_data):
         error("data must be an GCMS_data object")
-    if bin_size <= 0:
-        error("The bin size must be larger than zero.")
+    if bin_interval <= 0:
+        error("The bin interval must be larger than zero.")
+    if not is_number(bin_left):
+        error("'bin_left' must be a number.")
+    if not is_number(bin_right):
+        error("'bin_right' must be a number.")
 
     min_mass = data.get_min_mass()
     max_mass = data.get_max_mass()
-    return __fill_bins(data, min_mass, max_mass, bin_size)
+    return __fill_bins(data, min_mass, max_mass, bin_interval, bin_left, \
+        bin_right)
 
-def build_intensity_matrix_i(data):
+def build_intensity_matrix_i(data, bin_left=0.3, bin_right=0.7):
 
     """
     @summary: Sets the full intensity matrix with integer bins
 
     @param data: Raw GCMS data
-    @type bin_size: pyms.GCMS.GCMS_data
+    @type bin_interval: pyms.GCMS.GCMS_data
+
+    @param bin_left: left bin boundary offset (default 0.3)
+    @type bin_left: FloatType
+
+    @param bin_right: right bin boundary offset (default 0.7)
+    @type bin_right: FloatType
 
     @return: Binned IntensityMatrix object
     @rtype: pyms.GCMS.IntensityMatrix
@@ -76,24 +93,38 @@ def build_intensity_matrix_i(data):
 
     if not isinstance(data, GCMS_data):
         error("data must be an GCMS_data object")
+    if not is_number(bin_left):
+        error("'bin_left' must be a number.")
+    if not is_number(bin_right):
+        error("'bin_right' must be a number.")
 
-    min_mass = int(round(data.get_min_mass()))
-    max_mass = int(round(data.get_max_mass()))
-    return __fill_bins(data, min_mass, max_mass, 1)
+    # calc min/max mass boundary and constrain to +/- 1 mass
+    min_mass = data.get_min_mass()
+    max_mass = data.get_max_mass()
+    bot = max(min_mass-bin_right, min_mass-1, 0)
+    top = min(max_mass+bin_left, max_mass+1)
+    min_mass = int(bot)
+    max_mass = int(top)
 
-def __fill_bins(data, min_mass, max_mass, bin_size):
+    return __fill_bins(data, min_mass, max_mass, 1, bin_left, bin_right)
+
+def __fill_bins(data, min_mass, max_mass, bin_interval, bin_left, bin_right):
 
     """
     @summary: Fills the intensity values for all bins
 
     @param data: Raw GCMS data
-    @type bin_size: pyms.GCMS.GCMS_data
+    @type data: pyms.GCMS.GCMS_data
     @param min_mass: minimum mass value
     @type min_mass: IntType or FloatType
     @param max_mass: maximum mass value
     @type max_mass: IntType or FloatType
-    @param bin_size: bin size
-    @type bin_size: IntType or FloatType
+    @param bin_interval: interval between bin centres
+    @type bin_interval: IntType or FloatType
+    @param bin_left: left bin boundary offset
+    @type bin_left: FloatType
+    @param bin_right: right bin boundary offset
+    @type bin_right: FloatType
 
     @return: Binned IntensityMatrix object
     @rtype: pyms.GCMS.IntensityMatrix
@@ -109,17 +140,25 @@ def __fill_bins(data, min_mass, max_mass, bin_size):
         error("'min_mass' must be a number")
     if not is_number(max_mass):
         error("'max_mass' must be a number")
-    if not is_number(bin_size):
-        error("'bin_size' must be a number")
+    if not is_number(bin_interval):
+        error("'bin_interval' must be a number")
+    if not is_number(bin_left):
+        error("'bin_left' must be a number.")
+    if not is_number(bin_right):
+        error("'bin_right' must be a number.")
 
-    # calculate how many bins based on the mass range and bin size
-    # round to ensure max mass is included correctly
-    num_bins = int(round(float(max_mass - min_mass) / bin_size)) + 1
+    bin_left = abs(bin_left)
+    bin_right = abs(bin_right)
 
-    #print "Num of bins is:", num_bins
+    # calculate how many bins based on the mass range and bin interval
+    # range with left and right boundaries constrained to +/- 1 min/max
+    bot = max(min_mass-bin_right, min_mass-1, 0)
+    top = min(max_mass+bin_left, max_mass+1)
+
+    num_bins = int(float(top - bot) / bin_interval) + 1
 
     # initialise masses to bin centres
-    mass_list = [i * bin_size + min_mass for i in range(num_bins)]
+    mass_list = [i * bin_interval + min_mass for i in range(num_bins)]
 
     # fill the bins
     intensity_matrix = []
@@ -128,8 +167,12 @@ def __fill_bins(data, min_mass, max_mass, bin_size):
         masses = scan.get_mass_list()
         intensities = scan.get_intensity_list()
         for i in range(len(scan)):
-            index = int(round(float(masses[i] - min_mass) / bin_size))
-            intensitylist[index] += intensities[i]
+            x = float(masses[i] - min_mass) / bin_interval
+            # loop in case of overlapping boundaries
+            hi = min(int(x+bin_left),num_bins)
+            lo = max(int(x-bin_right),0)
+            for index in range(lo,hi):
+                intensitylist[index] += intensities[i]
         intensity_matrix.append(intensitylist)
 
     return IntensityMatrix(data.get_time_list(), mass_list, intensity_matrix)
@@ -179,7 +222,7 @@ def diff(data1, data2):
     scan_list2 = data2.get_scan_list()
     if not len(scan_list1) == len(scan_list2):
         # since the number of rention times are the same, this indicated
-        # some unexpected problem with data 
+        # some unexpected problem with data
         error("inconsistency in data detected")
 
     N = len(scan_list1)
@@ -247,7 +290,7 @@ def ic_window_points(ic, window_sele, half_window=False):
 
     """
     @summary: Converts window selection parameter into points based on
-        the time step in an ion chromatogram 
+        the time step in an ion chromatogram
 
     @param ic: ion chromatogram object relevant for the conversion
     @type ic: pyms.IO.Class.IonChromatogram
@@ -255,7 +298,7 @@ def ic_window_points(ic, window_sele, half_window=False):
         integer or time string. If integer, taken as the number of points.
         If a string, must of the form "<NUMBER>s" or "<NUMBER>m",
         specifying a time in seconds or minutes, respectively
-    @type window_sele: IntType or StringType 
+    @type window_sele: IntType or StringType
     @param half_window: Specifies whether to return half-window
     @type half_window: Booleantype
 
@@ -268,9 +311,9 @@ def ic_window_points(ic, window_sele, half_window=False):
     if is_int(window_sele):
 
         if half_window:
-            if window_sele % 2 == 0: 
+            if window_sele % 2 == 0:
                 error("window must be an odd number of points")
-            else: 
+            else:
                 points = int(math.floor(window_sele*0.5))
         else:
             points = window_sele
