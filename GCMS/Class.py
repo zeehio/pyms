@@ -857,11 +857,11 @@ class IntensityMatrix(object):
 
         best = self.__max_mass
         ix = 0
-        for i in range(len(self.__mass_list)):
-            tmp = abs(self.__mass_list[i] - mass)
+        for ii in range(len(self.__mass_list)):
+            tmp = abs(self.__mass_list[ii] - mass)
             if tmp < best:
                 best = tmp
-                ix = i
+                ix = ii
         return ix
 
     def get_matrix_list(self):
@@ -928,6 +928,77 @@ class IntensityMatrix(object):
 
         return ix_match
 
+    def crop_mass(self, mass_min, mass_max):
+
+        """
+        @summary: Crops mass spectrum
+
+        @param mass_min: Minimum mass value
+        @type mass_min: IntType or FloatType
+        @param mass_max: Maximum mass value
+        @type mass_max: IntType or FloatType
+
+        @return: none
+        @rtype: NoneType
+
+        @author: Andrew Isaac
+        """
+
+        if not is_number(mass_min) or not is_number(mass_max):
+            error("'mass_min' and 'mass_max' must be numbers")
+        if mass_min >= mass_max:
+            error("'mass_min' must be less than 'mass_max'")
+        if mass_min < self.__min_mass:
+            error("'mass_min' is less than the smallest mass: ",self.__min_mass)
+        if mass_max > self.__max_mass:
+            error("'mass_max' is greater than the smallest mass:", \
+                self.__min_mass)
+
+        # pre build mass_list and list of indecies
+        mass_list = self.__mass_list
+        new_mass_list = []
+        ii_list = []
+        for ii in range(len(mass_list)):
+             mass = mass_list[ii]
+             if mass >= mass_min and mass <= mass_max:
+                 new_mass_list.append(mass)
+                 ii_list.append(ii)
+
+        # update intensity matrix
+        im = self.__intensity_matrix
+        for spec_jj in range(len(im)):
+            new_spec = []
+            for ii in ii_list:
+                new_spec.append(im[spec_jj][ii])
+            im[spec_jj] = new_spec
+
+        self.__mass_list = new_mass_list
+        self.__min_mass = min(new_mass_list)
+        self.__max_mass = max(new_mass_list)
+
+    def null_mass(self, mass):
+
+        """
+        @summary: Ignore given (closest) mass in spectra
+
+        @param mass: Mass value to remove
+        @type mass: IntType or FloatType
+
+        @author: Andrew Isaac
+        """
+
+        if not is_number(mass):
+            error("'mass' must be numbers")
+        if mass < self.__min_mass or mass > self.__max_mass:
+            error("'mass' not in mass range:", self.__min_mass, "to", \
+                self.__max_mass)
+
+        ii = self.get_index_of_mass(mass)
+
+        im = self.__intensity_matrix
+        for spec_jj in range(len(im)):
+            im[spec_jj][ii] = 0
+
     def reduce_mass_spectra(self, N=5):
 
         """
@@ -953,11 +1024,11 @@ class IntensityMatrix(object):
             top_indices = top_indices[:N]
 
             # initiate new mass spectrum, and retain only top N intensities
-            intensity_list_new = [] 
+            intensity_list_new = []
 
             for jj in range(n):
                 intensity_list_new.append(0.0)
-                if jj in top_indices: 
+                if jj in top_indices:
                     intensity_list_new[jj] = intensity_list[jj]
 
             self.__intensity_matrix[ii] = intensity_list_new

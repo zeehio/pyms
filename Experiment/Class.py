@@ -23,8 +23,9 @@ Models a GC-MS experiment represented by a list of signal peaks
  #############################################################################
 
 from pyms.Utils.Error import error
-from pyms.Utils.Utils import is_list, is_str
-from pyms import Peak
+from pyms.Utils.Utils import is_str
+from pyms.Peak.Class import Peak
+from pyms.Peak.List.Utils import is_peak_list, sele_peaks_by_rt
 
 class Experiment:
 
@@ -35,37 +36,35 @@ class Experiment:
     @author: Andrew Isaac
     """
 
-    def __init__(self, name, peak_list):
+    def __init__(self, expr_code, peak_list):
 
         """
         @summary: Models an experiment
 
-        @param name: Unique identifier for the experiment
-        @type name: StringType
+        @param expr_code: Unique identifier for the experiment
+        @type expr_code: StringType
         @param peak_list: A list of peak objects
         @type peak_list: ListType
         """
 
-        if not is_str(name):
-            error("'name' must be a string")
-        if not is_list(peak_list):
-            error("'peak_list' must be a list")
-        if not len(peak_list) > 0 and not isinstance(peak_list[0], Peak):
+        if not is_str(expr_code):
+            error("'expr_code' must be a string")
+        if not is_peak_list(peak_list):
             error("'peak_list' must be a list of Peak objects")
 
-        self.__name = name
+        self.__expr_code = expr_code
         self.__peak_list = peak_list
 
-    def get_name(self):
+    def get_expr_code(self):
 
         """
-        @summary: Returns the name of the experiment
+        @summary: Returns the expr_code of the experiment
 
-        @return: The name of the experiment
+        @return: The expr_code of the experiment
         @rtype:  StringType
         """
 
-        return self.__name
+        return self.__expr_code
 
     def get_peak_list(self):
 
@@ -77,3 +76,19 @@ class Experiment:
         """
 
         return self.__peak_list
+
+    def sele_rt_range(self, rt_range):
+
+        """
+        @summary: Discards all peaks which have the retention time outside
+        the specified range
+
+        @param rt_range: Min, max retention time given as a list [rt_min,rt_max]
+        @type rt_range: ListType
+
+        @return: none
+        @rtype: NoneType
+        """
+
+        peaks_sele = sele_peaks_by_rt(self.__peak_list, rt_range)
+        self.__peak_list = peaks_sele

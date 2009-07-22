@@ -48,7 +48,7 @@ class Peak:
         @param rt: Retention time
         @type rt: FloatType
         @param ms: A ion mass, or spectra of maximising ions
-        @type ms: FloatType, pyms.GCSM.MassSpectrum
+        @type ms: FloatType, pyms.GCSM.Class.MassSpectrum
         @param minutes: Retention time units flag. If True, retention time
             is in minutes; if Flase retention time is in seconds
         @type minutes: BooleanType
@@ -132,7 +132,7 @@ class Peak:
             Clears the mass for a single ion chromatogram peak
 
         @param mz: The mass spectrum at the apex of the peak
-        @type mz: MassSpectrum
+        @type mz: pyms.GCSM.Class.MassSpectrum
 
         @return: none
         @rtype: NoneType
@@ -170,14 +170,15 @@ class Peak:
     def get_mass_spectrum(self):
 
         """
-        @summary: Gets the mass for a single ion chromatogram peak
+        @summary: Gets the mass spectrum at the apex of the peak
 
-        @return: The mass of the single ion chromatogram that the peak is from
-        @rtype: FloatType or IntType
+        @return: The mass spectrum at the apex of the peak
+        @rtype: pyms.GCSM.Class.MassSpectrum
         """
 
         return self.__mass_spectrum
 
+## TODO: What is this?
     def find_mass_spectrum(self, data, from_bounds=False):
 
         """
@@ -215,3 +216,83 @@ class Peak:
 
         # clear single ion chromatogram mass
         self.__ic_mass = None
+
+    def crop_mass(self, mass_min, mass_max):
+
+        """
+        @summary: Crops mass spectrum
+
+        @param mass_min: Minimum mass value
+        @type mass_min: IntType or FloatType
+        @param mass_max: Maximum mass value
+        @type mass_max: IntType or FloatType
+
+        @return: none
+        @rtype: NoneType
+
+        @author: Andrew Isaac
+        """
+
+        if not is_number(mass_min) or not is_number(mass_max):
+            error("'mass_min' and 'mass_max' must be numbers")
+        if mass_min >= mass_max:
+            error("'mass_min' must be less than 'mass_max'")
+
+        mass_list = self.__mass_spectrum.mass_list
+
+        if mass_min < min(mass_list):
+            error("'mass_min' is less than the smallest mass: ",min(mass_list))
+        if mass_max > max(mass_list):
+            error("'mass_max' is greater than the smallest mass:", \
+                max(mass_list))
+
+        # pre build mass_list and list of indecies
+        new_mass_list = []
+        new_mass_spec = []
+        mass_spec = self.__mass_spectrum.mass_spec
+        for ii in range(len(mass_list)):
+             mass = mass_list[ii]
+             if mass >= mass_min and mass <= mass_max:
+                 new_mass_list.append(mass)
+                 new_mass_spec.append(mass_spec[ii])
+
+        self.__mass_spectrum.mass_list = new_mass_list
+        self.__mass_spectrum.mass_spec = new_mass_spec
+
+        if len(new_mass_list) == 0:
+            error("mass spectrum is now empty")
+        elif len(new_mass_list) < 10:
+            print " WARNING: peak mass spectrum contains < 10 points"
+
+    def null_mass(self, mass):
+
+        """
+        @summary: Ignore given mass in spectra
+
+        @param mass: Mass value to remove
+        @type mass: IntType or FloatType
+
+        @author: Andrew Isaac
+        """
+
+        if self.__mass_spectrum == None:
+            error("mass spectrum not set for this peak")
+
+        if not is_number(mass):
+            error("'mass' must be numbers")
+
+        mass_list = self.__mass_spectrum.mass_list
+
+        if mass < min(mass_list) or mass > max(mass_list):
+            error("'mass' not in mass range:", min(mass_list), "to", \
+                max(mass_list))
+
+        best = max(mass_list)
+        ix = 0
+        for ii in range(len(mass_list)):
+            tmp = abs(mass_list[ii] - mass)
+            if tmp < best:
+                best = tmp
+                ix = ii
+
+        self.__mass_spectrum.mass_spec[ix] = 0
