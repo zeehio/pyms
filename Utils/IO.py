@@ -22,10 +22,51 @@ General I/O functions
  #                                                                           #
  #############################################################################
 
-import types, os, string
+import types, os, string, cPickle
 
 from pyms.Utils.Error import error
 from pyms.Utils.Utils import is_number, is_str, is_list
+
+def dump_object(object, file_name):
+
+    """
+    @summary: Dumps an object to a file through cPickle.dump()
+
+    @param object: Object to be dumpted
+    @type object: An instance of an arbitrary class
+
+    @param file_name: Name of the file for the object dump
+    @type file_name: StringType
+
+    @return: No return value
+    @rtype: No return type
+
+    @author: Vladimir Likic
+    """
+ 
+    fp = open_for_writing(file_name)
+    cPickle.dump(object, fp)
+    close_for_writing(fp)
+
+def load_object(file_name):
+
+    """
+    @summary: Loads an object previously dumped with dump_object()
+
+    @param file_name: Name of the object dump file
+    @type file_name: StringType
+
+    @return: Object contained in the file 'file_name'
+    @rtype: An instance of an arbitrary class
+
+    @author: Vladimir Likic
+    """
+ 
+    fp = open_for_reading(file_name)
+    object = cPickle.load(fp)
+    close_for_reading(fp)
+
+    return object
 
 def open_for_reading(file_name):
 
@@ -70,6 +111,7 @@ def open_for_writing(file_name):
         fp = open(file_name, "w")
     except IOError:
         error("Cannot open '%s' for writing" % (file_name))
+
     return fp
 
 def close_for_reading(fp):
