@@ -730,6 +730,7 @@ class IntensityMatrix(object):
             error("mass is out of range")
 
         ix = self.get_index_of_mass(mass)
+
         return self.get_ic_at_index(ix)
 
     def get_mass_list(self):
