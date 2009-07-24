@@ -662,15 +662,24 @@ class IntensityMatrix(object):
         if not is_int(ix):
             error("index not an integer")
 
+        # this returns an numpy.array object
         ia = ic.get_intensity_array()
 
+        # check if the dimension is ok
         if len(ia) != len(self.__intensity_matrix):
             error("ion chromatogram incompatible with the intensity matrix")
         else:
            N = len(ia)
 
+        # Convert 'ia' to a list. By convention, the attribute
+        # __intensity_matrix of the class IntensityMatrix is a list
+        # of lists. This makes pickling instances of IntensityMatrix
+        # practically possible, since pickling numpy.array objects
+        # produces ten times larger files compared to pickling python
+        #lists.
+        ial = ia.tolist()
         for i in range(N):
-            self.__intensity_matrix[i][ix] = ia[i]
+            self.__intensity_matrix[i][ix] = ial[i]
 
     def get_ic_at_index(self, ix):
 
