@@ -691,7 +691,6 @@ class IntensityMatrix(object):
 
         if not is_int(ix):
             error("index not an integer")
-
         try:
             ia = []
             for i in range(len(self.__intensity_matrix)):
@@ -699,11 +698,11 @@ class IntensityMatrix(object):
         except IndexError:
             error("index out of bounds.")
 
-        ia = numpy.array(ia)
+        ic_ia = numpy.array(ia)
         mass = self.get_mass_at_index(ix)
         rt = copy.deepcopy(self.__time_list)
 
-        return IonChromatogram(ia, rt, mass)
+        return IonChromatogram(ic_ia, rt, mass)
 
     def get_ic_at_mass(self, mass = None):
 
