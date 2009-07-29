@@ -23,6 +23,7 @@ Provides a class to model signal peak
  #############################################################################
 
 import math
+import copy
 
 from pyms.GCMS.Class import IntensityMatrix, MassSpectrum
 from pyms.Utils.Error import error
@@ -65,21 +66,78 @@ class Peak:
         if minutes:
             rt = rt*60.0
 
+        self.__minutes = minutes
+
         # basic peak attributes
         self.__rt = float(rt)
+        # these two attributes are required for
+        # setting the peak mass spectrum
         if not ms == None:
             if isinstance(ms, MassSpectrum):
                 # mass spectrum
                 self.__mass_spectrum = ms
                 self.__ic_mass = None
+                self.make_UID()
             else:
                 # single ion chromatogram properties
                 self.__ic_mass = ms
                 self.__mass_spectrum = None
+                self.make_UID()
 
-        # these two attributes are required for
-        # setting the peak mass spectrum
         self.__pt_bounds = None
+
+    def make_UID(self):
+
+        """
+        @summary: create a unique peak ID (UID) based on:
+            i) Int masses of top two intensities, their ratio and RT as:
+                Mass1-Mass2-Ratio*100-RT
+            ii) The single mass as int and RT
+            Retention Time (RT) written in minutes
+
+        @author: Andrew Isaac
+        """
+
+        minutes = 1.0
+        if self.__minutes == True:
+            minutes = 60.0
+        if self.__mass_spectrum != None:
+            mass_list = self.__mass_spectrum.mass_list
+            mass_spec = self.__mass_spectrum.mass_spec
+            # find top two masses
+            best = 0
+            best_ii = 0
+            best2_ii = 0
+            for ii in range(len(mass_spec)):
+                if mass_spec[ii] > best:
+                    best = mass_spec[ii]
+                    best2_ii = best_ii
+                    best_ii = ii
+            ratio = int(100*mass_spec[best2_ii]/best)
+            UID = "%d-%d-%d-%.2f" % (int(mass_list[best_ii]),
+                    int(mass_list[best2_ii]), ratio, self.__rt/minutes)
+        elif self.__ic_mass != None:
+            UID = "%d-%.2f" % (int(self.__ic_mass), self.__rt/minutes)
+        else:
+            UID =  "%.2f" % self.__rt/minutes
+
+        self.__UID = UID
+
+    def get_UID(self):
+
+        """
+        @summary: Return the unique peak ID (UID) based on:
+            i) Int masses of top two intensities and their ratio as:
+                Mass1-Mass2-Ratio*100
+            ii) The single mass as int
+
+        @return: UID string
+        @rtype: StringType
+
+        @author: Andrew Isaac
+        """
+
+        return self.__UID
 
     def set_pt_bounds(self, pt_bounds):
 
@@ -124,6 +182,7 @@ class Peak:
         self.__ic_mass = mz
         # clear mass spectrum
         self.__mass_spectrum = None
+        self.make_UID()
 
     def set_mass_spectrum(self, ms):
 
@@ -144,6 +203,7 @@ class Peak:
         self.__mass_spectrum = ms
         # clear ion mass
         self.__ic_mass = None
+        self.make_UID()
 
     def get_rt(self):
 
@@ -176,7 +236,7 @@ class Peak:
         @rtype: pyms.GCSM.Class.MassSpectrum
         """
 
-        return self.__mass_spectrum
+        return copy.deepcopy(self.__mass_spectrum)
 
 ## TODO: What is this?
     def find_mass_spectrum(self, data, from_bounds=False):
@@ -216,6 +276,7 @@ class Peak:
 
         # clear single ion chromatogram mass
         self.__ic_mass = None
+        self.make_UID()
 
     def crop_mass(self, mass_min, mass_max):
 

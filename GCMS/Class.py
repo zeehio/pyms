@@ -745,7 +745,7 @@ class IntensityMatrix(object):
     def get_mass_list(self):
 
         """
-        @summary: Returns a list of the bin masses
+        @summary: Returns a list of the binned masses
 
         @return: Binned mass list
         @rtype: ListType
