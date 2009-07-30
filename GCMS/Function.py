@@ -30,6 +30,13 @@ from pyms.GCMS.Class import GCMS_data, IntensityMatrix, IonChromatogram
 from pyms.Utils.Time import time_str_secs
 from pyms.Utils.Math import rmsd
 
+# If psyco is installed, use it to speed up running time
+try:
+    import psyco
+    psyco.full()
+except:
+    pass
+
 def build_intensity_matrix(data, bin_interval=1, bin_left=0.5, bin_right=0.5):
 
     """
@@ -98,13 +105,12 @@ def build_intensity_matrix_i(data, bin_left=0.3, bin_right=0.7):
     if not is_number(bin_right):
         error("'bin_right' must be a number.")
 
-    # calc min/max mass boundary and constrain to +/- 1 mass
     min_mass = data.get_min_mass()
     max_mass = data.get_max_mass()
-    bot = max(min_mass-bin_right, min_mass-1, 0)
-    top = min(max_mass+bin_left, max_mass+1)
-    min_mass = int(bot)
-    max_mass = int(top)
+
+    # Calc integer min mass based on right boundary
+    bin_right = abs(bin_right)
+    min_mass = int(min_mass+1-bin_right)
 
     return __fill_bins(data, min_mass, max_mass, 1, bin_left, bin_right)
 
@@ -150,30 +156,27 @@ def __fill_bins(data, min_mass, max_mass, bin_interval, bin_left, bin_right):
     bin_left = abs(bin_left)
     bin_right = abs(bin_right)
 
-    # calculate how many bins based on the mass range and bin interval
-    # range with left and right boundaries constrained to +/- 1 min/max
-    bot = max(min_mass-bin_right, min_mass-1, 0)
-    top = min(max_mass+bin_left, max_mass+1)
+    # To convert to int range, ensure bounds are < 1
+    bl = bin_left - int(bin_left)
 
-    num_bins = int(float(top - bot) / bin_interval) + 1
+    # Number of bins
+    num_bins = int(float(max_mass+bl-min_mass)/bin_interval)+1
 
     # initialise masses to bin centres
-    mass_list = [i * bin_interval + min_mass for i in range(num_bins)]
+    mass_list = [i * bin_interval + min_mass for i in xrange(num_bins)]
 
     # fill the bins
     intensity_matrix = []
     for scan in data.get_scan_list():
-        intensitylist = [0.0] * num_bins
+        intensity_list = [0.0] * num_bins
         masses = scan.get_mass_list()
         intensities = scan.get_intensity_list()
-        for i in range(len(scan)):
-            x = float(masses[i] - min_mass) / bin_interval
-            # loop in case of overlapping boundaries
-            hi = min(int(x+bin_left),num_bins)
-            lo = max(int(x-bin_right),0)
-            for index in range(lo,hi):
-                intensitylist[index] += intensities[i]
-        intensity_matrix.append(intensitylist)
+        for mm in xrange(num_bins):
+            for ii in xrange(len(scan)):
+                if masses[ii] >= mass_list[mm]-bin_left and \
+                masses[ii] < mass_list[mm]+bin_right:
+                    intensity_list[mm] += intensities[ii]
+        intensity_matrix.append(intensity_list)
 
     return IntensityMatrix(data.get_time_list(), mass_list, intensity_matrix)
 
