@@ -93,7 +93,6 @@ class Peak:
             i) Int masses of top two intensities, their ratio and RT as:
                 Mass1-Mass2-Ratio*100-RT
             ii) The single mass as int and RT
-            Retention Time (RT) written in minutes
 
         @author: Andrew Isaac
         """
@@ -325,6 +324,9 @@ class Peak:
         elif len(new_mass_list) < 10:
             print " WARNING: peak mass spectrum contains < 10 points"
 
+        # update UID
+        self.make_UID()
+
     def null_mass(self, mass):
 
         """
@@ -357,3 +359,6 @@ class Peak:
                 ix = ii
 
         self.__mass_spectrum.mass_spec[ix] = 0
+
+        # update UID
+        self.make_UID()

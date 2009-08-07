@@ -771,6 +771,8 @@ class IntensityMatrix(object):
         @author: Andrew Isaac
         """
 
+        # TODO: should a deepcopy be returned?
+
         if not is_int(ix):
             error("index not an integer")
 
