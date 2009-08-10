@@ -31,6 +31,13 @@ from pyms.Utils.Utils import is_list, is_number, is_int
 from pyms.GCMS.Class import IonChromatogram, MassSpectrum
 from pyms.Peak.Class import Peak
 
+# If psyco is installed, use it to speed up running time
+try:
+    import psyco
+    psyco.full()
+except:
+    pass
+
 #######################
 # structure
 # 1) find local maxima per ion, store intensity and scan index
@@ -65,10 +72,11 @@ def BillerBiemann(im, points=3, scans=1):
     maxima_im = get_maxima_matrix(im, points, scans)
     numrows = len(maxima_im)
     for row in range(numrows):
-        rt = rt_list[row]
-        ms = MassSpectrum(mass_list, maxima_im[row])
-        peak = Peak(rt, ms)
-        peak_list.append(peak)
+        if sum(maxima_im[row]) > 0:
+            rt = rt_list[row]
+            ms = MassSpectrum(mass_list, maxima_im[row])
+            peak = Peak(rt, ms)
+            peak_list.append(peak)
 
     return peak_list
 
@@ -92,12 +100,16 @@ def rel_threshold(pl, percent=2):
     @author: Andrew Isaac
     """
 
+    if not is_number(percent) or percent <= 0:
+        error("'percent' must be a number > 0")
+
     pl_copy = copy.deepcopy(pl)
     new_pl = []
     for p in pl_copy:
         ms = p.get_mass_spectrum()
         ia = ms.mass_spec
-        cutoff = max(ia)/100.0*float(percent)  # assume max(ia) big so /100 1st
+        # assume max(ia) big so /100 1st
+        cutoff = (max(ia)/100.0)*float(percent)
         for i in range(len(ia)):
             if ia[i] < cutoff:
                 ia[i] = 0
