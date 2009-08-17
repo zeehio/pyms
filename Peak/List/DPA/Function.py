@@ -34,6 +34,13 @@ from pyms.Experiment.Class import Experiment
 import Class
 import Utils
 
+# If psyco is installed, use it to speed up running time
+try:
+    import psyco
+    psyco.full()
+except:
+    pass
+
 def align_with_tree(T, min_peaks=1):
 
     """
@@ -324,7 +331,7 @@ def position_similarity(pos1, pos2, D):
                         cos = top/bot
                     else:
                         cos = 0
-                    rtime = numpy.exp(-((art-brt)/D)**2 / 2.0)
+                    rtime = numpy.exp(-(float(art-brt)/D)**2 / 2.0)
                     score = score + (1.0 - (cos*rtime))
                     count = count + 1
 

@@ -32,6 +32,13 @@ from pyms.GCMS.Class import MassSpectrum
 from pyms.Peak.Class import Peak
 import Function
 
+# If psyco is installed, use it to speed up running time
+try:
+    import psyco
+    psyco.full()
+except:
+    pass
+
 class Alignment(object):
 
     """
@@ -173,7 +180,7 @@ class Alignment(object):
             error("Cannot open output file for writing")
 
         # write experiment headers
-        header = '"' + '","'.join(self.expr_code) + "\"\n"
+        header = '"UID,"' + '","'.join(self.expr_code) + "\"\n"
 
         fp_rt.write(header)
         fp_area.write(header)
