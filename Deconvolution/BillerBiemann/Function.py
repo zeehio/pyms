@@ -76,6 +76,7 @@ def BillerBiemann(im, points=3, scans=1):
             rt = rt_list[row]
             ms = MassSpectrum(mass_list, maxima_im[row])
             peak = Peak(rt, ms)
+            peak.set_pt_bounds([0,row,0])  # store IM index for convenience
             peak_list.append(peak)
 
     return peak_list

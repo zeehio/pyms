@@ -341,11 +341,12 @@ class GCMS_data(object):
                 scan_list_new.append(scan)
                 time_list_new.append(time)
 
-        self.__time_list = time_list_new
-        self.__scan_list = scan_list_new
 
-        self.__min_rt = min(time_list_new)
-        self.__max_rt = max(time_list_new)
+        # update info
+        self.__scan_list = scan_list_new
+        self.__set_time(time_list_new)
+        self.__set_min_max_mass()
+        self.__calc_tic()
 
     def info(self, print_scan_n=False):
 

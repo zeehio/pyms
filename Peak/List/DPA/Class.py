@@ -30,6 +30,7 @@ from pyms.Utils.Error import error
 from pyms.Experiment.Class import Experiment
 from pyms.GCMS.Class import MassSpectrum
 from pyms.Peak.Class import Peak
+
 import Function
 
 # If psyco is installed, use it to speed up running time
@@ -64,6 +65,11 @@ class Alignment(object):
             self.expr_code =  []
             self.similarity = None
         else:
+            if not isinstance(expr, Experiment):
+                error("'expr' must be an Experiment object")
+            for peak in expr.get_peak_list():
+                if peak.get_area() == None or peak.get_area() <= 0:
+                    error("All peaks must have an area for alignment")
             self.peakpos = [ copy.deepcopy(expr.get_peak_list()) ]
             self.peakalgt = numpy.transpose(self.peakpos)
             self.expr_code =  [ expr.get_expr_code() ]
@@ -180,7 +186,7 @@ class Alignment(object):
             error("Cannot open output file for writing")
 
         # write experiment headers
-        header = '"UID,"' + '","'.join(self.expr_code) + "\"\n"
+        header = '"UID", "' + '", "'.join(self.expr_code) + '"\n'
 
         fp_rt.write(header)
         fp_area.write(header)
@@ -198,15 +204,15 @@ class Alignment(object):
                     else:
                         rtmin = peak.get_rt()
                     rts.append('%.3f' % rtmin)
-#                    areas.append('%.4f' % peak.norm_area)
+                    areas.append('%.4f' % peak.get_area())
                     new_peak_list.append(peak)
                 else:
                     rts.append('NA')
-#                    areas.append('NA')
+                    areas.append('NA')
 
             new_peak = self.composite_peak(new_peak_list, minutes)
             fp_rt.write(new_peak.get_UID()+", "+", ".join(rts) + "\n")
-#            fp_area.write(",".join(areas) + "\n")
+            fp_area.write(new_peak.get_UID()+", "+", ".join(areas) + "\n")
 
         fp_rt.close()
         fp_area.close()

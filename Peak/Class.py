@@ -85,6 +85,7 @@ class Peak:
                 self.make_UID()
 
         self.__pt_bounds = None
+        self.__area = None
 
     def make_UID(self):
 
@@ -144,7 +145,7 @@ class Peak:
         @summary: Sets peak boundaries in points
 
         @param pt_bounds: A list containing left, apex, and right
-            peak boundaries in points
+            peak boundaries in points, left and right are offsets
         @type pt_bounds: ListType
 
         @return: none
@@ -162,6 +163,49 @@ class Peak:
                     error("'pt_bounds' element not an integer")
 
         self.__pt_bounds = pt_bounds
+
+    def get_pt_bounds(self):
+
+        """
+        @summary: Gets peak boundaries in points
+
+        @return: A list containing left, apex, and right
+            peak boundaries in points, left and right are offsets
+        @rtype: ListType
+
+        @author: Andrew Isaac
+        """
+
+        return copy.deepcopy(self.__pt_bounds)
+
+    def get_area(self):
+
+        """
+        @summary: Gets the area under the peak
+
+        @return: The peak area
+        @rtype: FloatType
+
+        @author: Andrew Isaac
+        """
+
+        return self.__area
+
+    def set_area(self, area):
+
+        """
+        @summary: Sets the area under the peak
+
+        @param area: The peak area
+        @type area: FloatType
+
+        @author: Andrew Isaac
+        """
+
+        if not is_number(area) or area <= 0:
+            error("'area' must be a positive number")
+
+        self.__area = area
 
     def set_ic_mass(self, mz):
 
