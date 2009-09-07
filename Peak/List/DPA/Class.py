@@ -30,6 +30,7 @@ from pyms.Utils.Error import error
 from pyms.Experiment.Class import Experiment
 from pyms.GCMS.Class import MassSpectrum
 from pyms.Peak.Class import Peak
+from pyms.Peak.List.Function import composite_peak
 
 import Function
 
@@ -110,55 +111,6 @@ class Alignment(object):
         self.peakalgt = filtered_list
         self.peakpos = numpy.transpose(self.peakalgt)
 
-    def composite_peak(self, peak_list, minutes=False):
-
-        """
-        @summary: Create a peak that consists of a composite spectrum from all
-                    matched spectra.
-
-        @param peak_list: A list of peak objects for peaks matched by the
-            alignment.
-        @type peak_list: ListType
-        @param minutes: Return retention time as minutes
-        @type minutes: BooleanType
-
-        @return: Peak Object with combined mass spectra of 'peak_list'
-        @type: pyms.Peak.Class.Peak
-
-        @author: Andrew Isaac
-        """
-
-        first = True
-        count = 0
-        avg_rt = 0
-        new_ms = None
-        for peak in peak_list:
-            if peak is not None:
-                ms = peak.get_mass_spectrum()
-                spec = numpy.array(ms.mass_spec, dtype='d')
-                if first:
-                    avg_spec = numpy.zeros(len(ms.mass_spec), dtype='d')
-                    mass_list = ms.mass_list
-                    first = False
-                # scale all intensities to [0,1]
-                max_spec = max(spec)
-                if max_spec > 0:
-                    spec = spec/max_spec
-                else:
-                    spec = spec*0
-                avg_rt += peak.get_rt()
-                avg_spec += spec
-                count += 1
-        if count > 0:
-            avg_rt = avg_rt/count
-            if minutes == True:
-                avg_rt = avg_rt/60.0
-            avg_spec = avg_spec/count
-            new_ms = MassSpectrum(mass_list, avg_spec)
-            return Peak(avg_rt, new_ms, minutes)
-        else:
-            return None
-
     def write_csv(self, rt_file_name, area_file_name, minutes=True):
 
         """
@@ -210,12 +162,44 @@ class Alignment(object):
                     rts.append('NA')
                     areas.append('NA')
 
-            new_peak = self.composite_peak(new_peak_list, minutes)
+            new_peak = composite_peak(new_peak_list, minutes)
             fp_rt.write(new_peak.get_UID()+", "+", ".join(rts) + "\n")
             fp_area.write(new_peak.get_UID()+", "+", ".join(areas) + "\n")
 
         fp_rt.close()
         fp_area.close()
+
+    def aligned_peaks(self, minutes=False):
+
+        """
+        @summary: Returns a list of Peak objects where each peak has the
+            combined spectra and average retention time of all peaks that
+            aligned.
+
+        @param minutes: An optional indicator of whether retention times are
+            in minutes. If False, retention time are in seconds
+        @type minutes: BooleanType
+
+        @return: A list of composite peaks based on the alignment.
+        @rtype: ListType
+
+        @author: Andrew Isaac
+        """
+
+        # for all peaks found
+        peak_list = []
+        for peak_idx in range(len(self.peakpos[0])):
+            # get aligned peaks, ignore missing
+            new_peak_list = []
+            for align_idx in range(len(self.peakpos)):
+                peak = self.peakpos[align_idx][peak_idx]
+                if peak is not None:
+                    new_peak_list.append(peak)
+            #create composite
+            new_peak = composite_peak(new_peak_list, minutes)
+            peak_list.append(new_peak)
+
+        return peak_list
 
 class PairwiseAlignment(object):
 

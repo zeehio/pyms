@@ -36,7 +36,7 @@ def window_smooth(ic, window=__DEFAULT_WINDOW, median=False):
     @summary: Applies window smoothing on ion chromatogram
 
     @param ic: The input ion chromatogram
-    @type ic: pyms.IO.Class.IonChromatogram
+    @type ic: pyms.GCMS.Class.IonChromatogram
     @param window: The window selection parameter. This can be an integer
         or time string. If integer, taken as the number of points. If a
         string, must of the form "<NUMBER>s" or "<NUMBER>m", specifying
@@ -47,7 +47,7 @@ def window_smooth(ic, window=__DEFAULT_WINDOW, median=False):
     @type median: Booleantype
 
     @return: Smoothed ion chromatogram
-    @rtype: pyms.IO.Class.IonChromatogram
+    @rtype: pyms.GCMS.Class.IonChromatogram
 
     @author: Vladimir Likic
     """

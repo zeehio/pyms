@@ -78,22 +78,32 @@ class Peak:
                 self.__mass_spectrum = ms
                 self.__ic_mass = None
                 self.make_UID()
+
+                # TEST: to test if this speeds things up
+                self.mass_spec = ms.mass_spec
+
             else:
                 # single ion chromatogram properties
                 self.__ic_mass = ms
                 self.__mass_spectrum = None
                 self.make_UID()
 
+                # TEST: to test if this speeds things up
+                self.mass_spec = None
+
+
         self.__pt_bounds = None
         self.__area = None
+
+        # TEST: to test if this speeds things up
+        self.rt = self.__rt
 
     def make_UID(self):
 
         """
-        @summary: create a unique peak ID (UID) based on:
-            i) Int masses of top two intensities, their ratio and RT as:
-                Mass1-Mass2-Ratio*100-RT
-            ii) The single mass as int and RT
+        @summary: Create a unique peak ID (UID) based on:
+            Int masses of top two intensities, their ratio and RT (as
+            Mass1-Mass2-Ratio*100-RT); or the single mass as int and RT.
 
         @author: Andrew Isaac
         """
@@ -127,9 +137,8 @@ class Peak:
 
         """
         @summary: Return the unique peak ID (UID) based on:
-            i) Int masses of top two intensities and their ratio as:
-                Mass1-Mass2-Ratio*100
-            ii) The single mass as int
+            Int masses of top two intensities and their ratio (as
+            Mass1-Mass2-Ratio*100); or the single mass as int.
 
         @return: UID string
         @rtype: StringType
@@ -227,14 +236,17 @@ class Peak:
         self.__mass_spectrum = None
         self.make_UID()
 
+        # TEST: to test if this speeds things up
+        self.mass_spec = None
+
     def set_mass_spectrum(self, ms):
 
         """
         @summary: Sets the mass spectrum
             Clears the mass for a single ion chromatogram peak
 
-        @param mz: The mass spectrum at the apex of the peak
-        @type mz: pyms.GCSM.Class.MassSpectrum
+        @param ms: The mass spectrum at the apex of the peak
+        @type ms: pyms.GCSM.Class.MassSpectrum
 
         @return: none
         @rtype: NoneType
@@ -247,6 +259,9 @@ class Peak:
         # clear ion mass
         self.__ic_mass = None
         self.make_UID()
+
+        # TEST: to test if this speeds things up
+        self.mass_spec = ms.mass_spec
 
     def get_rt(self):
 
@@ -321,6 +336,9 @@ class Peak:
         self.__ic_mass = None
         self.make_UID()
 
+        # TEST: to test if this speeds things up
+        self.mass_spec = self.__mass_spectrum.mass_spec
+
     def crop_mass(self, mass_min, mass_max):
 
         """
@@ -371,6 +389,9 @@ class Peak:
         # update UID
         self.make_UID()
 
+        # TEST: to test if this speeds things up
+        self.mass_spec = self.__mass_spectrum.mass_spec
+
     def null_mass(self, mass):
 
         """
@@ -406,3 +427,6 @@ class Peak:
 
         # update UID
         self.make_UID()
+
+        # TEST: to test if this speeds things up
+        self.mass_spec = self.__mass_spectrum.mass_spec

@@ -53,7 +53,7 @@ def BillerBiemann(im, points=3, scans=1):
         Deconvolution based on the algorithm of Biller and Biemann (1974)
 
     @param im: An IntensityMatrix object
-    @type im: pyms.GCMS.IntensityMatrix
+    @type im: pyms.GCMS.Class.IntensityMatrix
     @param points: Peak if maxima over 'points' number of scans (Default 3)
     @type points: IntType
     @param scans: To compensate for spectra scewing,
@@ -91,9 +91,6 @@ def rel_threshold(pl, percent=2):
     @type pl: ListType
     @param percent: Threshold for relative percentage of intensity (Default 2%)
     @type percent: FloatType
-
-    @param window: The number of points to use as one scan
-    @type window: IntType
 
     @return: A new list of Peak objects with threshold ions
     @rtype: ListType
@@ -157,7 +154,7 @@ def sum_maxima(im, points=3, scans=1):
     @summary: Reconstruct the TIC as sum of maxima
 
     @param im: An IntensityMatrix object
-    @type im: pyms.GCMS.IntensityMatrix
+    @type im: pyms.GCMS.Class.IntensityMatrix
     @param points: Peak if maxima over 'points' number of scans
     @type points: IntType
     @param scans: To compensate for spectra scewing,
@@ -165,7 +162,7 @@ def sum_maxima(im, points=3, scans=1):
     @type scans: IntType
 
     @return: The reconstructed TIC
-    @rtype: pyms.GCMS.IonChromatogram
+    @rtype: pyms.GCMS.Class.IonChromatogram
 
     @author: Andrew Isaac
     """
@@ -237,7 +234,7 @@ def get_maxima_list(ic, points=3):
     @summary: List of retention time and intensity of local maxima for ion
 
     @param ic: An IonChromatogram object
-    @type ic: pyms.GCMS.IonChromatogram
+    @type ic: pyms.GCMS.Class.IonChromatogram
     @param points: Peak if maxima over 'points' number of scans
     @type points: IntType
 

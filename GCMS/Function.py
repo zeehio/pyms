@@ -1,5 +1,5 @@
 """
-Provides generic IO functions for GC-MS data objects
+Provides conversion and information functions for GC-MS data objects
 """
 
  #############################################################################
@@ -43,7 +43,7 @@ def build_intensity_matrix(data, bin_interval=1, bin_left=0.5, bin_right=0.5):
     @summary: Sets the full intensity matrix with flexible bins
 
     @param data: Raw GCMS data
-    @type data: pyms.GCMS.GCMS_data
+    @type data: pyms.GCMS.Class.GCMS_data
 
     @param bin_interval: interval between bin centres (default 1)
     @type bin_interval: IntType or FloatType
@@ -55,7 +55,7 @@ def build_intensity_matrix(data, bin_interval=1, bin_left=0.5, bin_right=0.5):
     @type bin_right: FloatType
 
     @return: Binned IntensityMatrix object
-    @rtype: pyms.GCMS.IntensityMatrix
+    @rtype: pyms.GCMS.Class.IntensityMatrix
 
     @author: Qiao Wang
     @author: Andrew Isaac
@@ -82,7 +82,7 @@ def build_intensity_matrix_i(data, bin_left=0.3, bin_right=0.7):
     @summary: Sets the full intensity matrix with integer bins
 
     @param data: Raw GCMS data
-    @type bin_interval: pyms.GCMS.GCMS_data
+    @type data: pyms.GCMS.Class.GCMS_data
 
     @param bin_left: left bin boundary offset (default 0.3)
     @type bin_left: FloatType
@@ -91,7 +91,7 @@ def build_intensity_matrix_i(data, bin_left=0.3, bin_right=0.7):
     @type bin_right: FloatType
 
     @return: Binned IntensityMatrix object
-    @rtype: pyms.GCMS.IntensityMatrix
+    @rtype: pyms.GCMS.Class.IntensityMatrix
 
     @author: Qiao Wang
     @author: Andrew Isaac
@@ -120,7 +120,7 @@ def __fill_bins(data, min_mass, max_mass, bin_interval, bin_left, bin_right):
     @summary: Fills the intensity values for all bins
 
     @param data: Raw GCMS data
-    @type data: pyms.GCMS.GCMS_data
+    @type data: pyms.GCMS.Class.GCMS_data
     @param min_mass: minimum mass value
     @type min_mass: IntType or FloatType
     @param max_mass: maximum mass value
@@ -133,7 +133,7 @@ def __fill_bins(data, min_mass, max_mass, bin_interval, bin_left, bin_right):
     @type bin_right: FloatType
 
     @return: Binned IntensityMatrix object
-    @rtype: pyms.GCMS.IntensityMatrix
+    @rtype: pyms.GCMS.Class.IntensityMatrix
 
     @author: Qiao Wang
     @author: Andrew Isaac
@@ -185,10 +185,10 @@ def diff(data1, data2):
     """
     @summary: Compares two GCMS_data objects
 
-    @param im1: GCMS data set 1
-    @type im1: pyms.GCMS.Class.GCMS_data
-    @param im2: GCMS data set 2
-    @type im2: pyms.GCMS.Class.GCMS_data
+    @param data1: GCMS data set 1
+    @type data1: pyms.GCMS.Class.GCMS_data
+    @param data2: GCMS data set 2
+    @type data2: pyms.GCMS.Class.GCMS_data
 
     @author: Qiao Wang
     @author: Andrew Isaac

@@ -22,10 +22,13 @@ Functions related to Peak modification
  #                                                                           #
  #############################################################################
 
+import numpy
+
 #from pyms.Utils.Error import error
-#from pyms.Peaks.Class import Peak
+from pyms.Peak.Class import Peak
 from pyms.Utils.Utils import is_str, is_list
 from pyms.Utils.Math import median
+from pyms.GCMS.Class import MassSpectrum
 
 # If psyco is installed, use it to speed up running time
 try:
@@ -33,7 +36,6 @@ try:
     psyco.full()
 except:
     pass
-
 
 def peak_sum_area(im, peak, max_bound=0):
 
@@ -215,74 +217,3 @@ def median_bounds(im, peak, shared=True):
         r_med = median(right_list)
 
     return l_med, r_med
-
-
-#def peak_areas(im, peak_list):
-
-#    """
-#    @Summary: Calculate peak areas based on a peak list and the originating
-#        Intensity Matrix.
-
-#    @param im: The originating Intensity Matrix
-#    @type im: pyms.GCMS.Class.IntensityMatrix
-#    @param peak_list: A list of peaks from the Intensity Matrix
-#    @type peak_list: ListType
-
-#    @return: The peak_list with the Peak information modified to include the
-#        peak areas.
-#    @rtype: ListType
-#    """
-
-    # Find peak boundaries and median values
-#    for peak in peak_list:
-#        ms = peak.get_mass_spectrum()
-#        rt = peak.get_rt()
-        # get list of edge distances for each apexing mass
-#        left = [ left_edge(im, mass, rt) for mass in ms.mass_list \
-#            if ms.mass_spec[mass] > 0 ]
-#        right = [ right_edge(im, mass, rt) for mass in ms.mass_list \
-#            if ms.mass_spec[mass] > 0 ]
-        # median of distances
-#        left.sort()
-#        right.sort()
-#        n = len(left)
-#        if n & 1:  # odd length
-#            med_left = left[n//2]
-#            med_right = right[n//2]
-#        else:
-#            med_left = (left[n//2 - 1] + left[n//2])/2.0
-#            med_right = (right[n//2 - 1] + right[n//2])/2.0
-
-    # determine shape params
-#    for peak in peak_list:
-#        ms = peak.get_mass_spectrum()
-#        rt = peak.get_rt()
-#        mean_list = []
-#        stddev_list = []
-#        skew_list = []
-#        for mass in ms.mass_list:
-#            if ms.mass_spec[mass] > 0:
-#                mean, stddev, skew = shape_vals(im, mass, rt)
-#                mean_list.append(mean)
-#                stddev_list.append(stddev)
-#                skew_list.append(skew)
-        # median shape values
-#        mean_list.sort()
-#        stddev_list.sort()
-#        skew_list.sort()
-#        n = len(mean_list)
-#        if n & 1:
-#            med_mean = mean_list[n//2]
-#            med_stddev = stddev_list[n//2]
-#            med_skew = skew_list[n//2]
-#        else:
-#            med_left = (mean_list[n//2 - 1] + mean_list[n//2])/2.0
-#            med_stddev = (stddev_list[n//2 - 1] + stddev_list[n//2])/2.0
-#            med_skew = (skew_list[n//2 - 1] + skew_list[n//2])/2.0
-
-    # Integrate areas
-#    for peak in peak_list:
-#        ms = peak.get_mass_spectrum()
-#        rt = peak.get_rt()
-#        area, rms = fit_peak(im, ms, rt, med_mean, med_stddev, med_skew)
-

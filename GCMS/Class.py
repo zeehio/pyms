@@ -242,7 +242,7 @@ class GCMS_data(object):
         @summary: Returns the total ion chromatogram
 
         @return: Total ion chromatogram
-        @rtype: pyms.GCMS.IonChromatogram
+        @rtype: pyms.GCMS.Class.IonChromatogram
 
         @author: Andrew Isaac
         """
@@ -254,7 +254,7 @@ class GCMS_data(object):
         @summary: Calculate the total ion chromatogram
 
         @return: Total ion chromatogram
-        @rtype: pyms.GCMS.IonChromatogram
+        @rtype: pyms.GCMS.Class.IonChromatogram
 
         @author: Qiao Wang
         @author: Andrew Isaac
@@ -282,13 +282,13 @@ class GCMS_data(object):
             scan number
         @type end: IntType or StrType
 
-        The arguments 'begin' and 'end' can be either integers
-        (in which case they are taken as the first/last scan
-        number for trimming) or strings in which case they are
-        treated as time strings and converted to scan numbers.
+            The arguments 'begin' and 'end' can be either integers
+            (in which case they are taken as the first/last scan
+            number for trimming) or strings in which case they are
+            treated as time strings and converted to scan numbers.
 
-        At present both 'begin' and 'end' must be of the same
-        type, either both scan numbers or time strings.
+            At present both 'begin' and 'end' must be of the same
+            type, either both scan numbers or time strings.
 
         @author: Vladimir Likic
         """
@@ -388,10 +388,10 @@ class GCMS_data(object):
             'file_root'.I.csv (intensities) and 'file_root'.mz.csv
             (m/z values).
 
-        This method writes two CSV files, containing intensities
-        and corresponding m/z values. In general these are not
-        two-dimensional matrices, because different scans may
-        have different number of m/z values recorded.
+            This method writes two CSV files, containing intensities
+            and corresponding m/z values. In general these are not
+            two-dimensional matrices, because different scans may
+            have different number of m/z values recorded.
 
         @param file_root: The root for the output file names
         @type file_root: StringType
@@ -595,8 +595,8 @@ class IntensityMatrix(object):
         @param mass_list: Binned mass values
         @type mass_list: ListType
 
-        @param intensity_list: Binned intensity values per scan
-        @type intensity_list: ListType
+        @param intensity_matrix: Binned intensity values per scan
+        @type intensity_matrix: ListType
 
         @author: Andrew Isaac
         """
@@ -717,11 +717,11 @@ class IntensityMatrix(object):
     def get_ic_at_mass(self, mass = None):
 
         """
-        @summary: Returns the ion chromatogram for the specified mass
-            The nearest binned mass to mass is used
+        @summary: Returns the ion chromatogram for the specified mass.
+            The nearest binned mass to mass is used.
 
-        If no mass value is given, the function returns the total
-        ion chromatogram.
+            If no mass value is given, the function returns the total
+            ion chromatogram.
 
         @param mass: Mass value of an ion chromatogram
         @type mass: IntType
@@ -767,7 +767,7 @@ class IntensityMatrix(object):
         @type ix: IntType
 
         @return: Mass spectrum
-        @rtype: pyms.GCMS.MassSpectrum
+        @rtype: pyms.GCMS.Class.MassSpectrum
 
         @author: Andrew Isaac
         """
@@ -1450,9 +1450,9 @@ class MassSpectrum(object):
         """
         @summary: Initialise the MassSpectrum
 
-        @para mass_list: List of binned masses
+        @param mass_list: List of binned masses
         @type mass_list: ListType
-        @para intensity_list: List of binned intensities
+        @param intensity_list: List of binned intensities
         @type intensity_list: ListType
 
         @author: Andrew Isaac

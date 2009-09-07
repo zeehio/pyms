@@ -23,8 +23,9 @@ Functions for peak alignment by dynamic programming
  #############################################################################
 
 import copy
-
 import numpy
+#from math import sqrt, log
+import math
 
 from pyms.Utils.Error import error, stop
 from pyms.Utils.Utils import is_list
@@ -124,7 +125,7 @@ def align(a1, a2, D, gap):
     @param D: Retention time tolerance
     @type D: FloatType
     @param gap: Gap penalty
-    @type D: FloatType
+    @type gap: FloatType
 
     @return: Aligned alignments
     @rtype: pyms.Peak.List.Class.Alignment
@@ -270,6 +271,7 @@ def score_matrix(a1, a2, D):
     @rtype: pyms.Peak.List.Class.Alignment
 
     @author: Qiao Wang
+    @author: Andrew Isaac
     """
 
     score_matrix = numpy.zeros((len(a1.peakalgt), len(a2.peakalgt)))
@@ -291,7 +293,7 @@ def position_similarity(pos1, pos2, D):
 
     """
     @summary: Calculates the similarity between the two alignment
-        positions
+        positions.  A score of 0 is best and 1 is worst.
 
     @param pos1: The position of the first alignment
     @param pos2: The position of the second alignment
@@ -305,38 +307,46 @@ def position_similarity(pos1, pos2, D):
     @author: Andrew Isaac
     """
 
-
-### TODO: why does this loop, since each pos is a single entry?
-### TODO: The original dot product paper weights spectra by:
-#            sqrt(intensity)*mass^3  (mass^1 or ^3 are similar)
-
     score = 0.0
     count = 0
 
+    ## Attempt to speed up by only calculating 'in-range' values
+    ## set tollerance to 1/1000
+    _TOL = 0.001
+    cutoff = D*math.sqrt(-2.0*math.log(_TOL))
+
     for a in pos1:
         if a is not None:
-            aspec = a.get_mass_spectrum().mass_spec
-            art = a.get_rt()
-            mass_spect1 = numpy.array(aspec, dtype='d')
-            mass_spect1_sum = numpy.sum(mass_spect1**2, axis=0)
+            aspec = a.mass_spec
+            art = a.rt
+            once = True
             for b in pos2:
                 if b is not None:
-                    bspec = b.get_mass_spectrum().mass_spec
-                    brt = b.get_rt()
-                    mass_spect2 = numpy.array(bspec, dtype='d')
-                    mass_spect2_sum = numpy.sum(mass_spect2**2, axis=0)
-                    top = numpy.dot(mass_spect1, mass_spect2)
-                    bot = numpy.sqrt(mass_spect1_sum*mass_spect2_sum)
-                    if bot > 0:
-                        cos = top/bot
+                    brt = b.rt
+                    # in range?
+                    if abs(art-brt) > cutoff:
+                        score += 1.0  # NB score of 1 is worst
                     else:
-                        cos = 0
-                    rtime = numpy.exp(-(float(art-brt)/D)**2 / 2.0)
-                    score = score + (1.0 - (cos*rtime))
+                        # Once per b-loop
+                        if once:
+                            mass_spect1 = numpy.array(aspec, dtype='d')
+                            mass_spect1_sum = numpy.sum(mass_spect1**2, axis=0)
+                            once = False
+                        bspec = b.mass_spec
+                        mass_spect2 = numpy.array(bspec, dtype='d')
+                        mass_spect2_sum = numpy.sum(mass_spect2**2, axis=0)
+                        top = numpy.dot(mass_spect1, mass_spect2)
+                        bot = numpy.sqrt(mass_spect1_sum*mass_spect2_sum)
+                        if bot > 0:
+                            cos = top/bot
+                        else:
+                            cos = 0
+                        rtime = numpy.exp(-((art-brt)/float(D))**2 / 2.0)
+                        score = score + (1.0 - (cos*rtime))
                     count = count + 1
 
     if count == 0:
-        score=0.0
+        score = 1.0  # NB score of 1 is worst
     else:
         score = score/float(count)
 

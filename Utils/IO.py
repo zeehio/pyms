@@ -38,12 +38,9 @@ def dump_object(object, file_name):
     @param file_name: Name of the file for the object dump
     @type file_name: StringType
 
-    @return: No return value
-    @rtype: No return type
-
     @author: Vladimir Likic
     """
- 
+
     fp = open_for_writing(file_name)
     cPickle.dump(object, fp)
     close_for_writing(fp)
@@ -61,7 +58,7 @@ def load_object(file_name):
 
     @author: Vladimir Likic
     """
- 
+
     fp = open_for_reading(file_name)
     object = cPickle.load(fp)
     close_for_reading(fp)

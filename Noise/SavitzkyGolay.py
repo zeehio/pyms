@@ -38,7 +38,7 @@ def savitzky_golay(ic, window=__DEFAULT_WINDOW, \
     @summary: Applies Savitzky-Golay filter on ion chromatogram
 
     @param ic: The input ion chromatogram
-    @type ic: pyms.IO.Class.IonChromatogram
+    @type ic: pyms.GCMS.Class.IonChromatogram
     @param window: The window selection parameter. This can be an integer
         or time string. If integer, taken as the number of points. If a
         string, must of the form "<NUMBER>s" or "<NUMBER>m", specifying
@@ -49,7 +49,7 @@ def savitzky_golay(ic, window=__DEFAULT_WINDOW, \
     @type degree: IntType
 
     @return: Smoothed ion chromatogram
-    @rtype: pyms.IO.Class.IonChromatogram
+    @rtype: pyms.GCMS.Class.IonChromatogram
 
     @author: Uwe Schmitt
     @author: Vladimir Likic
@@ -83,7 +83,7 @@ def __calc_coeff(num_points, pol_degree, diff_order=0):
     @summary: Calculates filter coefficients for symmetric savitzky-golay
         filter
 
-    See: http://www.nrbook.com/a/bookcpdf/c14-8.pdf
+        See: http://www.nrbook.com/a/bookcpdf/c14-8.pdf
 
     @param num_points: Means that 2*num_points+1 values contribute to
        the smoother

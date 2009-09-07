@@ -24,10 +24,10 @@ Provides functions for signal noise analysis
 
 import sys, random, copy, math
 
-from pyms.IO.GCMS.Function import is_ionchromatogram 
+from pyms.IO.GCMS.Function import is_ionchromatogram
 from pyms.Utils.Error import error
-from pyms.Utils.Time import window_sele_points 
-from pyms.Utils.Math import MAD 
+from pyms.Utils.Time import window_sele_points
+from pyms.Utils.Math import MAD
 
 _DEFAULT_WINDOW = 256
 _DEFAULT_N_WINDOWS = 1024
@@ -36,11 +36,11 @@ def analyze_noise(ic, window=_DEFAULT_WINDOW, n_windows=_DEFAULT_N_WINDOWS,
     rand_seed=None):
 
     """
-    @summary: Applies noise analysis based on randomly placed windows
+    @summary: Applies noise analysis based on randomly placed windows.
 
-    The noise value is calculated by repeatedly and picking random windows
-    (of a specified width) and calculating median absolute deviation (MAD).
-    The noise estimate is given by the minimum MAD.
+        The noise value is calculated by repeatedly and picking random windows
+        (of a specified width) and calculating median absolute deviation (MAD).
+        The noise estimate is given by the minimum MAD.
 
     @param ic: An IonChromatogram object
     @type ic: pyms.IO.Class.IonCromatogram
@@ -49,7 +49,7 @@ def analyze_noise(ic, window=_DEFAULT_WINDOW, n_windows=_DEFAULT_N_WINDOWS,
     @param n_windows: The number of windows to calculate
     @type n_windows: IntType
     @param rand_seed: Random seed generator
-    @type rand_seed: A number
+    @type rand_seed: IntType
 
     @return: The noise estimate
     @rtype: FloatType
@@ -61,7 +61,7 @@ def analyze_noise(ic, window=_DEFAULT_WINDOW, n_windows=_DEFAULT_N_WINDOWS,
         error("argument must be an IonChromatogram object")
 
     ia = ic.get_intensity_array() # fetch the intensities
-    
+
     # Create an instance of the Random class
     if rand_seed != None:
         generator = random.Random(rand_seed)
@@ -71,12 +71,12 @@ def analyze_noise(ic, window=_DEFAULT_WINDOW, n_windows=_DEFAULT_N_WINDOWS,
     window_pts = window_sele_points(ic, window)
 
     maxi = ia.size - window_pts
-    noise_level = math.fabs(ia.max()-ia.min()) 
+    noise_level = math.fabs(ia.max()-ia.min())
     best_window_pos = None
     seen_positions = []
 
     cntr = 0
-    
+
     while cntr < n_windows:
         # generator.randrange(): last point not included in range
         try_pos = generator.randrange(0, maxi+1)
@@ -90,6 +90,6 @@ def analyze_noise(ic, window=_DEFAULT_WINDOW, n_windows=_DEFAULT_N_WINDOWS,
                 best_window_pos = try_pos
         cntr = cntr + 1
         seen_positions.append(try_pos)
-  
+
     return noise_level
 
