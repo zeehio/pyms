@@ -57,10 +57,13 @@ def peak_sum_area(im, peak, max_bound=0):
     """
 
     sum_area = 0
-    mat = im.get_matrix_list()
+    # Use internal values (not copy)
+    #mat = im.get_matrix_list()
+    mat = im.intensity_matrix
     ms = peak.get_mass_spectrum()
     rt = peak.get_rt()
     apex = im.get_index_at_time(rt)
+
     # get peak masses with non-zero intensity
     mass_ii = [ ii for ii in xrange(len(ms.mass_list)) \
         if ms.mass_spec[ii] > 0 ]
@@ -71,8 +74,6 @@ def peak_sum_area(im, peak, max_bound=0):
         ia = [ mat[scan][ii] for scan in xrange(len(mat)) ]
         area, left, right, l_share, r_share = ion_area(ia, apex, max_bound)
         sum_area += area
-
-    # TODO: median bounds and update peak bound & area info
 
     return sum_area
 

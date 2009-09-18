@@ -623,6 +623,9 @@ class IntensityMatrix(object):
         self.__min_mass = min(mass_list)
         self.__max_mass = max(mass_list)
 
+        # Direct access for speed (DANGEROUS)
+        self.intensity_matrix = self.__intensity_matrix
+
     def get_size(self):
 
         """
