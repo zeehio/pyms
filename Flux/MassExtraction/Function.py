@@ -1,5 +1,5 @@
 """
-Function for LabelledData.MID.Extract
+Function for Flux.MassExtract
 """
 
 
@@ -35,22 +35,22 @@ def extract_mid(file_base, file_numbers, compound, ion, rt, mid_size, win_size):
     @summary: Method for extracting mass isotopomer distribution (MID)
 
     @param file_base: Base for file names
-    @type file_base: types.StringType
+    @type file_base: StringType
     @param file_numbers: File numbers
-    @type file_numbers: types.TupleType
+    @type file_numbers: TupleType
     @param compound: Name of the compound
-    @type compound: types.StringType
+    @type compound: StringType
     @param ion: m/z value of the fragement ion
-    @type ion: types.IntType
+    @type ion: IntType
     @param rt: Retention time of the compound
-    @type rt: types.FloatType
+    @type rt: FloatType
     @param mid_size: Size of the mass distribution vector
-    @type mid_size: types.IntType
+    @type mid_size: IntType
     @param win_size: Size of the window for local maximum search
-    @type win_size: types.FloatType
+    @type win_size: FloatType
 
     @return: None
-    @rtype: types.NoneType
+    @rtype: NoneType
     
     @author: Milica Ng
     """
