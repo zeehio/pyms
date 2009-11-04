@@ -1,5 +1,5 @@
 """
-Functions for LabelledData.MID.Correct
+Functions for Flux.MassCorrect
 """
 
  #############################################################################
