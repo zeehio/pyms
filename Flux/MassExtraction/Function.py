@@ -25,10 +25,8 @@ Functions for Flux.MassExtract
 
 
 from pyms.Flux.Class import MIDS
-
 from pyms.GCMS.IO.ANDI.Function import ANDI_reader
 from pyms.GCMS.Function import build_intensity_matrix_i
-from pyms.Utils.IO import save_data
 
 def peak_apex(ic, rt, win_size):
 
@@ -191,12 +189,8 @@ def extract_mid(data_file_root, data_file_nums, mids, win_size, noise):
     compound = mids.get_name()
     print '\n', 'Compound:', compound, '\n'
 
+    # loop over files
     for file_num in data_file_nums:
-
-        # initialise variables
-        left_boundary_sum = 0
-        right_boundary_sum = 0
-        sum_count = 0
 
         # load raw data
         andi_file = data_file_root+str(file_num)+".CDF"
@@ -207,17 +201,21 @@ def extract_mid(data_file_root, data_file_nums, mids, win_size, noise):
 
         # loop over required ions
         ions = mids.get_ion_list()
-
         for ion in ions:
 
-	    # loop over required number mass isotopomers
+            # initialise sum variables
+            left_boundary_sum = 0
+            right_boundary_sum = 0
+            sum_count = 0
+
+	    # loop over required number of mass isotopomers
             mid_size = mids.get_mid_size()
             for mz in range(ion, ion+mid_size):
 
                 # get ion chromatogram at current m/z
-                ic = im.get_ic_at_mass(mz) ##store all and pass to calculate_mid
+                ic = im.get_ic_at_mass(mz) # todo: store all and pass to calculate_mid
 
-                # get indices for apex and left/right boundaries
+                # get indices for apex and left/right boundary
                 rt = mids.get_rt()
                 peak_apex_ix = peak_apex(ic, rt, win_size)
                 peak_apex_int = ic.get_intensity_at_index(peak_apex_ix) 
@@ -225,11 +223,10 @@ def extract_mid(data_file_root, data_file_nums, mids, win_size, noise):
                 right_boundary_ix = right_boundary(ic, peak_apex_ix, peak_apex_int)
 
                 # sum left and right boundary indices in the current file
-                if peak_apex_int > noise: # todo: estimate noise from the file
+                if peak_apex_int > noise: 
                     left_boundary_sum = left_boundary_sum + left_boundary_ix
                     right_boundary_sum = right_boundary_sum + right_boundary_ix
                     sum_count = sum_count + 1
-
 
             if sum_count > 0:
 
@@ -246,11 +243,6 @@ def extract_mid(data_file_root, data_file_nums, mids, win_size, noise):
             else:
 
                 mid = [0] * mid_size
-            # fp = open(out_file, 'a')
-            # fp.write('\n')
-            # fp.write(andi_file)
-            # fp.write('does not have at least one mass isotopomer intensity greater than')
-            # fp.write(noise)
                 print 'file:', andi_file, 'does not have at least one mass isotopomer intensity greater than', noise 
 
     return mids
