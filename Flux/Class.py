@@ -135,14 +135,33 @@ class MIDS(object):
         """
 
         print ' -> Writing to file ', out_file
+
+        # write a header (name and retention time)
         fp = open(out_file, 'a')
         fp.write('\n')
         fp.write(self.__name)
-        fp.write(',')
-        fp.write(str(self.__rt))
-        fp.write(',')
-        fp.write(str(self.__mid_size))
         fp.write('\n')
+        fp.write(str(self.__rt))
+        fp.write(' secs')
+        fp.write(',')
+        fp.write(str(self.__rt/float(60)))
+        fp.write(' mins')
+        # fp.write(',')
+        # fp.write(str(self.__mid_size))
+        fp.write('\n')
+
+        # write column names
+        fp.write('ion')
+        fp.write(',')
+        fp.write('file num')
+        fp.write(',')
+        for m in range(0,self.__mid_size):
+            fp.write('M+')
+            fp.write(str(m))
+            fp.write(',')            
+        fp.write('\n')
+
+        # write mid values
         keys = self.__values.keys()
         keys.sort()
         for k in keys:
