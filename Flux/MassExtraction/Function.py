@@ -242,7 +242,10 @@ def extract_mid(data_file_root, data_file_nums, mids, win_size, noise):
             
             else:
 
-                mid = [0] * mid_size
                 print 'file:', andi_file, 'does not have at least one mass isotopomer intensity greater than', noise 
+                mid = [0] * mid_size
+
+                # store mass isotopomer distribution inside mids variable
+                mids.set_values(mid, ion, file_num)
 
     return mids

@@ -165,16 +165,29 @@ class MIDS(object):
         keys = self.__values.keys()
         keys.sort()
         for k in keys:
+
+            # write ion value
             fp.write(str(k[0]))
             fp.write(',')
+
+            # write file number
             fp.write(str(k[1]))
             mid = self.__values[k]
             fp.write(',') 
+
+            # write mass isotopomer distribution
             mid_sum = float(sum(mid))
-            for i in range(0, len(mid)):     
-                fp.write(str(mid[i]/mid_sum))
-                fp.write(',')
-            fp.write('\n')
+            if mid_sum > 0:
+                for i in range(0, len(mid)):     
+                    fp.write(str(mid[i]/mid_sum))
+                    fp.write(',')
+                fp.write('\n')
+            else:
+                for i in range(0, len(mid)):     
+                    fp.write(str(0.0))
+                    fp.write(',')
+                fp.write('\n')
+                
         fp.close()
         print '\n'
 
