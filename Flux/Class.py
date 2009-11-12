@@ -31,7 +31,7 @@ class MIDS(object):
     @author: Milica Ng
     """
 
-    def __init__(self, name, rt, ion_list, mid_size):
+    def __init__(self, name, rt, ion, mid_size):
         
         """
         @summary: Initialise the MIDS data object
@@ -40,8 +40,8 @@ class MIDS(object):
         @type name: StringType
         @param rt: Chromatographic retention time
         @type rt: FloatType
-        @param ion_list: List of compound diagnostic ions
-        @type ion_list: ListType
+        @param ion_list: Diagnostic ions
+        @type ion_list: IntType
         @param mid_size: total number of masses (n+1 for M, M+1, ..., M+n)
         @type mid_size: IntType
 
@@ -50,7 +50,7 @@ class MIDS(object):
         
         self.__name = name
         self.__rt = rt
-        self.__ion_list = ion_list
+        self.__ion = ion
         self.__mid_size = mid_size
         self.__values = {}
 
@@ -80,18 +80,18 @@ class MIDS(object):
 
         return self.__rt
 
-    def get_ion_list(self):
+    def get_ion(self):
 
         """
-        @summary: Return list of diagnostic ions
+        @summary: Return diagnostic ion
 
-        @return: List of diagnostic ions
-        @rtype: ListType
+        @return: Diagnostic ion
+        @rtype: IntType
 
         @author: Milica Ng
         """
 
-        return self.__ion_list
+        return self.__ion
 
     def get_mid_size(self):
 
@@ -106,7 +106,7 @@ class MIDS(object):
 
         return self.__mid_size
 
-    def set_values(self, mid, ion, file_num):
+    def set_values(self, mid, file_num):
 
         """
         @summary: Set the MID values for an ion inside a particular file
@@ -121,7 +121,7 @@ class MIDS(object):
         @author: Milica Ng
         """
 
-        self.__values[ion,file_num] = mid
+        self.__values[file_num] = mid
 
     def write(self, out_file):
 
@@ -134,25 +134,25 @@ class MIDS(object):
         @author: Milica Ng
         """
 
-        print ' -> Writing to file ', out_file
-
         # write a header (name and retention time)
         fp = open(out_file, 'a')
         fp.write('\n')
         fp.write(self.__name)
         fp.write('\n')
         fp.write(str(self.__rt))
-        fp.write(' secs')
-        fp.write(',')
+        fp.write('secs')
+        fp.write('\n')
         fp.write(str(self.__rt/float(60)))
-        fp.write(' mins')
+        fp.write('mins')
+        fp.write('\n')
+        fp.write('ion ')
+        fp.write(str(self.__ion))
         # fp.write(',')
         # fp.write(str(self.__mid_size))
+
         fp.write('\n')
 
         # write column names
-        fp.write('ion')
-        fp.write(',')
         fp.write('file num')
         fp.write(',')
         for m in range(0,self.__mid_size):
@@ -164,18 +164,15 @@ class MIDS(object):
         # write mid values
         keys = self.__values.keys()
         keys.sort()
+
         for k in keys:
 
-            # write ion value
-            fp.write(str(k[0]))
+            # write file number
+            fp.write(str(k))
             fp.write(',')
 
-            # write file number
-            fp.write(str(k[1]))
-            mid = self.__values[k]
-            fp.write(',') 
-
             # write mass isotopomer distribution
+            mid = self.__values[k]
             mid_sum = float(sum(mid))
             if mid_sum > 0:
                 for i in range(0, len(mid)):     
@@ -189,6 +186,5 @@ class MIDS(object):
                 fp.write('\n')
                 
         fp.close()
-        print '\n'
 
 
