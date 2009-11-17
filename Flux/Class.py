@@ -106,7 +106,7 @@ class MIDS(object):
 
         return self.__mid_size
 
-    def set_values(self, mid, file_num):
+    def set_values(self, mid, file_name):
 
         """
         @summary: Set the MID values for an ion inside a particular file
@@ -115,13 +115,13 @@ class MIDS(object):
         @type mid: ListType
         @param ion: Diagnostic ion
         @type ion: IntType
-        @param file_num: File number
-        @type file_num: StringType
+        @param file_name: File number
+        @type file_name: StringType
 
         @author: Milica Ng
         """
 
-        self.__values[file_num] = mid
+        self.__values[file_name] = mid
 
     def write(self, out_file):
 
@@ -139,9 +139,11 @@ class MIDS(object):
         fp.write('\n')
         fp.write(self.__name)
         fp.write('\n')
+        fp.write('rt = ')
         fp.write(str(self.__rt))
         fp.write('secs')
         fp.write('\n')
+        fp.write('rt = ')
         fp.write(str(self.__rt/float(60)))
         fp.write('mins')
         fp.write('\n')
@@ -153,7 +155,7 @@ class MIDS(object):
         fp.write('\n')
 
         # write column names
-        fp.write('file num')
+        fp.write('file name')
         fp.write(',')
         for m in range(0,self.__mid_size):
             fp.write('M+')
