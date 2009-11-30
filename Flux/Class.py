@@ -149,8 +149,8 @@ class MIDS(object):
         fp.write('\n')
         fp.write('ion ')
         fp.write(str(self.__ion))
-        # fp.write(',')
-        # fp.write(str(self.__mid_size))
+        fp.write('\n')
+        fp.write(str(self.__mid_size))
 
         fp.write('\n')
 
