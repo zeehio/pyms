@@ -25,6 +25,8 @@ Functions for Flux.MassExtract
 
 
 from pyms.Flux.Class import MIDS
+from pyms.Noise.SavitzkyGolay import savitzky_golay
+from pyms.Baseline.TopHat import tophat
 
 def peak_apex(ic, rt, win_size):
 
@@ -185,13 +187,13 @@ def extract_mid(file_name, im, mids, win_size, noise):
     
     # get name, rt, ion and MID size
     compound = mids.get_name()
-    print compound,
+    # print compound,
     rt = mids.get_rt()
-    print ' rt:', rt,
+    # print ' rt:', rt,
     ion = mids.get_ion()
-    print ' ion:', ion,
+    # print ' ion:', ion,
     mid_size = mids.get_mid_size()
-    print ' mid_size:', mid_size
+    # print ' mid_size:', mid_size
 
     # initialise variables
     left_boundary_sum = 0
@@ -203,9 +205,13 @@ def extract_mid(file_name, im, mids, win_size, noise):
     for mz in range(ion, ion+mid_size):
 
         # get ion chromatogram at current m/z
-        print 'about to get ic at mass', mz
+        # print 'about to get ic at mass', mz
         # todo: check if mass is out of range, raise an error!
         ic = im.get_ic_at_mass(mz) 
+        # smooth noise + correct baseline
+        ic_smooth = savitzky_golay(ic)
+        ic_bc = tophat(ic_smooth, struct="1.5m")
+        ic = ic_bc
         # store ic's to pass them to calculate_mid
         ic_list.append(ic)
 
@@ -235,7 +241,7 @@ def extract_mid(file_name, im, mids, win_size, noise):
             
     else:
 
-        print 'file:', file_name, 'does not have at least one mass isotopomer intensity greater than', noise 
+        # print 'file:', file_name, 'does not have at least one mass isotopomer intensity greater than', noise 
         mid = [0] * mid_size
 
         # store mass isotopomer distribution inside mids variable
