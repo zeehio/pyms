@@ -28,6 +28,9 @@ from pyms.Flux.Class import MIDS
 from pyms.Noise.SavitzkyGolay import savitzky_golay
 from pyms.Baseline.TopHat import tophat
 
+# for plotting only:
+from pylab import * # plotfile, savefig
+
 def peak_apex(ic, rt, win_size):
 
     """
@@ -133,16 +136,10 @@ def calculate_mid(ic_list, ave_left_ix, ave_right_ix):
     """
     @summary: Calculate mass isotopomer distribution
 
-    @param ion: Ion m/z
-    @type ion: IntType
-    @param mid_size: mid_size (n+1) is the number of masses (M, M+1, ..., M+n)
-    @type mid_size: IntType
     @param ave_left_ix: Average left boundary index for the ions
     @type ave_left_ix: IntType
     @param ave_right_ix: Average right boundary index for the ions
     @type ave_right_ix: IntType
-    @param out_file: Name of the output file
-    @type out_file: StringType
     
     @return: None
     @rtype: NoneType
@@ -162,6 +159,36 @@ def calculate_mid(ic_list, ave_left_ix, ave_right_ix):
         mid.append(area)
 
     return mid
+
+def plot_ics(ic_list, ave_left_ix, ave_right_ix, file_name, compound):
+
+    """
+    @summary: For testing purposes only! To be deleted.
+    
+    @author: Milica Ng
+    """
+
+    count = 0
+    for ic in ic_list:
+        col1 = []
+        col2 = []
+
+        for ix in range(ave_left_ix-11,ave_right_ix+11):
+            col1.append(ic.get_time_at_index(ix))
+            # print '\n', 'time at index', ix, '=', ic.get_time_at_index(ix)
+            col2.append(ic.get_intensity_at_index(ix))
+            # print '\n', 'intensity at index', ix, '=', ic.get_intensity_at_index(ix)
+
+        plot_file = compound+"-"+str(file_name)+"-"+str(count)+"-"+".png"
+        count = count+1        
+        print '-> Plotting ', plot_file, '\n'
+        plot(col1,col2) 
+        vlines(ic.get_time_at_index(ave_left_ix), 0, 4000)
+        vlines(ic.get_time_at_index(ave_right_ix), 0, 4000)
+        title(plot_file)
+        savefig(plot_file)
+        close()
+
 
 def extract_mid(file_name, im, mids, win_size, noise):
 
@@ -208,10 +235,12 @@ def extract_mid(file_name, im, mids, win_size, noise):
         # print 'about to get ic at mass', mz
         # todo: check if mass is out of range, raise an error!
         ic = im.get_ic_at_mass(mz) 
+
         # smooth noise + correct baseline
         ic_smooth = savitzky_golay(ic)
         ic_bc = tophat(ic_smooth, struct="1.5m")
         ic = ic_bc
+
         # store ic's to pass them to calculate_mid
         ic_list.append(ic)
 
@@ -232,6 +261,9 @@ def extract_mid(file_name, im, mids, win_size, noise):
         # find average of left and right boundary index in the current file
         ave_left_ix = left_boundary_sum/sum_count
         ave_right_ix = right_boundary_sum/sum_count
+
+        # plot for testing purposes only. to be deleted!
+        plot_ics(ic_list, ave_left_ix, ave_right_ix, file_name, compound)
 
         # calculate mass isotopomer distribution in the current file
         mid = calculate_mid(ic_list, ave_left_ix, ave_right_ix)
