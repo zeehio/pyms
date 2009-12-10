@@ -28,10 +28,10 @@ from pyms.Flux.Class import MIDS
 from pyms.Noise.SavitzkyGolay import savitzky_golay
 from pyms.Baseline.TopHat import tophat
 
-# for plotting only:
-from pylab import * # plotfile, savefig
+# for plotting only, delete later!
+from pylab import * # used by plotfile, savefig
 
-def peak_apex(ic, rt, win_size):
+def peak_apex(ic, rt, win_size, compound, file_name, mz):
 
     """
     @summary: Locate peak apex, as a local maximum 
@@ -42,6 +42,12 @@ def peak_apex(ic, rt, win_size):
     @type rt: FloatType
     @param win_size: Window for a local maximum search
     @type win_size: FloatType
+    @param compound: Compound name used to raise the warning 
+    @type compound:StringType
+    @param file_name: File name used to raise the warning
+    @type file_name: TypeString
+    @param mz: Mass to charge ratio used to raise the warning
+    @type mz: IntType
     
     @return: Ion Chromatogram index 
     @rtype: IntType
@@ -63,6 +69,7 @@ def peak_apex(ic, rt, win_size):
        if ic.get_intensity_at_index(ix) > peak_apex_int:
           peak_apex_int = ic.get_intensity_at_index(ix)
           peak_apex_ix = ix
+
     # peak_apex_rt = ic.get_time_at_index(peak_apex_ix)
 
     return peak_apex_ix
@@ -136,6 +143,8 @@ def calculate_mid(ic_list, ave_left_ix, ave_right_ix):
     """
     @summary: Calculate mass isotopomer distribution
 
+    @param ic_list: List of IonChromatograms
+    @type ic_list: ListType
     @param ave_left_ix: Average left boundary index for the ions
     @type ave_left_ix: IntType
     @param ave_right_ix: Average right boundary index for the ions
@@ -160,7 +169,7 @@ def calculate_mid(ic_list, ave_left_ix, ave_right_ix):
 
     return mid
 
-def plot_ics(ic_list, ave_left_ix, ave_right_ix, file_name, compound):
+def plot_ics(ic_list, ave_left_ix, ave_right_ix, file_name, compound, noise):
 
     """
     @summary: For testing purposes only! To be deleted.
@@ -175,16 +184,14 @@ def plot_ics(ic_list, ave_left_ix, ave_right_ix, file_name, compound):
 
         for ix in range(ave_left_ix-11,ave_right_ix+11):
             col1.append(ic.get_time_at_index(ix))
-            # print '\n', 'time at index', ix, '=', ic.get_time_at_index(ix)
             col2.append(ic.get_intensity_at_index(ix))
-            # print '\n', 'intensity at index', ix, '=', ic.get_intensity_at_index(ix)
 
-        plot_file = compound+"-"+str(file_name)+"-"+str(count)+"-"+".png"
+        plot_file = compound+"-"+str(file_name)+"-"+str(count)+".png"
         count = count+1        
-        print '-> Plotting ', plot_file, '\n'
+        # print '-> Plotting ', plot_file, '\n'
         plot(col1,col2) 
-        vlines(ic.get_time_at_index(ave_left_ix), 0, 4000)
-        vlines(ic.get_time_at_index(ave_right_ix), 0, 4000)
+        vlines(ic.get_time_at_index(ave_left_ix), 0, noise)
+        vlines(ic.get_time_at_index(ave_right_ix), 0, noise)
         title(plot_file)
         savefig(plot_file)
         close()
@@ -205,6 +212,8 @@ def extract_mid(file_name, im, mids, win_size, noise):
     @type mid_size: IntType
     @param win_size: Size of the window for local maximum search
     @type win_size: FloatType
+    @param noise: Noise threshold below which signal is assumed unreliable
+    @type win_size: IntType
 
     @return: Mass isotopomer distribution data
     @rtype: pyms.Flux.Class.MIDS
@@ -214,25 +223,22 @@ def extract_mid(file_name, im, mids, win_size, noise):
     
     # get name, rt, ion and MID size
     compound = mids.get_name()
-    # print compound,
     rt = mids.get_rt()
-    # print ' rt:', rt,
     ion = mids.get_ion()
-    # print ' ion:', ion,
     mid_size = mids.get_mid_size()
-    # print ' mid_size:', mid_size
 
-    # initialise variables
+    # initialise loop variables
     left_boundary_sum = 0
     right_boundary_sum = 0
     sum_count = 0
     ic_list = []
+    peak_apex_time_list = []
+    peak_apex_intensity_list = []
 
     # loop over required number of mass isotopomers
     for mz in range(ion, ion+mid_size):
 
         # get ion chromatogram at current m/z
-        # print 'about to get ic at mass', mz
         # todo: check if mass is out of range, raise an error!
         ic = im.get_ic_at_mass(mz) 
 
@@ -241,29 +247,61 @@ def extract_mid(file_name, im, mids, win_size, noise):
         ic_bc = tophat(ic_smooth, struct="1.5m")
         ic = ic_bc
 
-        # store ic's to pass them to calculate_mid
+        # store ic's for calculate_mid later
         ic_list.append(ic)
 
-        # get indices for apex and left/right boundary
-        peak_apex_ix = peak_apex(ic, rt, win_size)
-        peak_apex_int = ic.get_intensity_at_index(peak_apex_ix) 
+        # get peak apex index and intensity
+        peak_apex_ix = peak_apex(ic, rt, win_size,compound, file_name, mz)
+        peak_apex_int = ic.get_intensity_at_index(peak_apex_ix)
+
+        # store peak apex retention time & intensity for later checks
+        peak_apex_time_list.append(ic.get_time_at_index(peak_apex_ix))
+        peak_apex_intensity_list.append(ic.get_intensity_at_index(peak_apex_ix))
+
+        # get indices for left/right boundary
         left_boundary_ix = left_boundary(ic, peak_apex_ix, peak_apex_int)
         right_boundary_ix = right_boundary(ic, peak_apex_ix, peak_apex_int)
 
-        # sum left and right boundary indices in the current file
         if peak_apex_int > noise: 
+
+            # raise warning if current peak apex retention time is within 2secs of previous ones
+            for time in peak_apex_time_list:
+                if (abs(ic.get_time_at_index(peak_apex_ix) - time)) > 2:
+                     print 'WARNING:', compound, ion,' The peak apex retention time shift is larger than 2 secs in' , file_name, 'for ion', mz
+                break
+            # raise warning if peak apex is smaller than its neighbours
+            if ic.get_intensity_at_index(peak_apex_ix) < ic.get_intensity_at_index(peak_apex_ix-1):
+                print 'WARNING:', compound, ion,' There is a larger intensity to the left of peak apex in' , file_name, 'ion', mz
+            if ic.get_intensity_at_index(peak_apex_ix) < ic.get_intensity_at_index(peak_apex_ix+1):
+                print 'WARNING:', compound, ion,'  There is a larger intensity to the right of peak apex in' , file_name, 'ion', mz
+
+            # sum left and right boundary indices above noise in the current file
             left_boundary_sum = left_boundary_sum + left_boundary_ix
             right_boundary_sum = right_boundary_sum + right_boundary_ix
             sum_count = sum_count + 1
 
     if sum_count > 0:
 
+        # raise warning if peak boundaries belonging to a single peak were used as average
+        if sum_count == 1:
+        print 'WARNING:',compound, ion,' Only one peak was larger than', noise, '!','in' , file_name
+
         # find average of left and right boundary index in the current file
         ave_left_ix = left_boundary_sum/sum_count
         ave_right_ix = right_boundary_sum/sum_count
 
+        # raise warning if an intensity larger than noise is found where peak apex is smaller than noise
+        j = 0
+        for peak_apex_intensity in peak_apex_intensity_list:
+             if peak_apex_intensity < noise:
+                 for ix in range(ave_left_ix, ave_right_ix):
+                     if ic_list[j].get_intensity_at_index(ix) > noise:
+                         print 'WARNING:', compound,' An intensity greater than', noise, 'in' , file_name, 'ion',ion,'+', j
+                         break
+             j = j+1
+
         # plot for testing purposes only. to be deleted!
-        plot_ics(ic_list, ave_left_ix, ave_right_ix, file_name, compound)
+        plot_ics(ic_list, ave_left_ix, ave_right_ix, file_name, compound, noise)
 
         # calculate mass isotopomer distribution in the current file
         mid = calculate_mid(ic_list, ave_left_ix, ave_right_ix)
@@ -273,7 +311,6 @@ def extract_mid(file_name, im, mids, win_size, noise):
             
     else:
 
-        # print 'file:', file_name, 'does not have at least one mass isotopomer intensity greater than', noise 
         mid = [0] * mid_size
 
         # store mass isotopomer distribution inside mids variable
