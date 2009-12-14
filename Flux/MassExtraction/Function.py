@@ -31,7 +31,7 @@ from pyms.Baseline.TopHat import tophat
 # for plotting only, delete later!
 from pylab import * # used by plotfile, savefig
 
-def peak_apex(ic, rt, win_size, compound, file_name, mz):
+def peak_apex(ic, rt, win_size):
 
     """
     @summary: Locate peak apex, as a local maximum 
@@ -42,12 +42,6 @@ def peak_apex(ic, rt, win_size, compound, file_name, mz):
     @type rt: FloatType
     @param win_size: Window for a local maximum search
     @type win_size: FloatType
-    @param compound: Compound name used to raise the warning 
-    @type compound:StringType
-    @param file_name: File name used to raise the warning
-    @type file_name: TypeString
-    @param mz: Mass to charge ratio used to raise the warning
-    @type mz: IntType
     
     @return: Ion Chromatogram index 
     @rtype: IntType
@@ -134,7 +128,7 @@ def right_boundary(ic, peak_apex_ix, peak_apex_int):
             right_boundary_int = ic.get_intensity_at_index(ix)
             ix = ix + 1
     right_boundary_ix = ix - 1
-    # right_boundary_rt = ic.get_time_at_index(right_boundary_ix)
+
     return right_boundary_ix
 
 
@@ -183,12 +177,13 @@ def plot_ics(ic_list, ave_left_ix, ave_right_ix, file_name, compound, noise):
         col2 = []
 
         for ix in range(ave_left_ix-11,ave_right_ix+11):
-            col1.append(ic.get_time_at_index(ix))
-            col2.append(ic.get_intensity_at_index(ix))
 
-        plot_file = compound+"-"+str(file_name)+"-"+str(count)+".png"
+            if (0 < ix) and (ix < len(ic)):
+                col1.append(ic.get_time_at_index(ix))
+                col2.append(ic.get_intensity_at_index(ix))
+
+        plot_file = "plots/"+compound+"-"+str(file_name)+"-"+str(count)+".png"
         count = count+1        
-        # print '-> Plotting ', plot_file, '\n'
         plot(col1,col2) 
         vlines(ic.get_time_at_index(ave_left_ix), 0, noise)
         vlines(ic.get_time_at_index(ave_right_ix), 0, noise)
@@ -251,7 +246,7 @@ def extract_mid(file_name, im, mids, win_size, noise):
         ic_list.append(ic)
 
         # get peak apex index and intensity
-        peak_apex_ix = peak_apex(ic, rt, win_size,compound, file_name, mz)
+        peak_apex_ix = peak_apex(ic, rt, win_size)
         peak_apex_int = ic.get_intensity_at_index(peak_apex_ix)
 
         # store peak apex retention time & intensity for later checks
@@ -264,16 +259,19 @@ def extract_mid(file_name, im, mids, win_size, noise):
 
         if peak_apex_int > noise: 
 
-            # raise warning if current peak apex retention time is within 2secs of previous ones
+            # raise warning if current peak apex retention time is within half a window of previous ones
             for time in peak_apex_time_list:
-                if (abs(ic.get_time_at_index(peak_apex_ix) - time)) > 2:
-                     print 'WARNING:', compound, ion,' The peak apex retention time shift is larger than 2 secs in' , file_name, 'for ion', mz
-                break
-            # raise warning if peak apex is smaller than its neighbours
+                if (abs(ic.get_time_at_index(peak_apex_ix) - time)) > (win_size/2):
+                     warning = 'Warning: '+compound+' '+str(file_name)+' '+str(mz)+' Peak apex rt shift > '+str(win_size/2)+'secs'
+                     mids.append_warning(warning)
+                     break
+            # raise warning if peak apex is smaller than left or right intensity
             if ic.get_intensity_at_index(peak_apex_ix) < ic.get_intensity_at_index(peak_apex_ix-1):
-                print 'WARNING:', compound, ion,' There is a larger intensity to the left of peak apex in' , file_name, 'ion', mz
+                warning = 'Warning: '+compound+' '+str(file_name)+' '+str(mz)+' An intensity > peak apex on the LEFT'
+                mids.append_warning(warning)
             if ic.get_intensity_at_index(peak_apex_ix) < ic.get_intensity_at_index(peak_apex_ix+1):
-                print 'WARNING:', compound, ion,'  There is a larger intensity to the right of peak apex in' , file_name, 'ion', mz
+                warning = 'Warning: '+compound+' '+str(file_name)+' '+str(mz)+' An intensity > peak apex on the RIGHT'
+                mids.append_warning(warning)
 
             # sum left and right boundary indices above noise in the current file
             left_boundary_sum = left_boundary_sum + left_boundary_ix
@@ -284,7 +282,8 @@ def extract_mid(file_name, im, mids, win_size, noise):
 
         # raise warning if peak boundaries belonging to a single peak were used as average
         if sum_count == 1:
-        print 'WARNING:',compound, ion,' Only one peak was larger than', noise, '!','in' , file_name
+            warning = 'Warning: '+compound+' '+str(file_name)+' Only one ion peak was larger than '+str(noise)+'!'
+            mids.append_warning(warning)
 
         # find average of left and right boundary index in the current file
         ave_left_ix = left_boundary_sum/sum_count
@@ -296,11 +295,12 @@ def extract_mid(file_name, im, mids, win_size, noise):
              if peak_apex_intensity < noise:
                  for ix in range(ave_left_ix, ave_right_ix):
                      if ic_list[j].get_intensity_at_index(ix) > noise:
-                         print 'WARNING:', compound,' An intensity greater than', noise, 'in' , file_name, 'ion',ion,'+', j
+                         warning = 'Warning: '+compound+' '+str(file_name)+' '+str(ion+j)+' Peak apex detected  as lower than '+str(noise)+' however an intensity integrated was larger than '+str(noise)
+                         mids.append_warning(warning)
                          break
              j = j+1
 
-        # plot for testing purposes only. to be deleted!
+        # plot for testing purposes only. to be deleted! 
         plot_ics(ic_list, ave_left_ix, ave_right_ix, file_name, compound, noise)
 
         # calculate mass isotopomer distribution in the current file

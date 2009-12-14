@@ -44,6 +44,8 @@ class MIDS(object):
         @type ion_list: IntType
         @param mid_size: total number of masses (n+1 for M, M+1, ..., M+n)
         @type mid_size: IntType
+        @param warnings: Warnings list
+        @type warnings: ListType
 
         @author: Milica Ng
         """
@@ -53,6 +55,7 @@ class MIDS(object):
         self.__ion = ion
         self.__mid_size = mid_size
         self.__values = {}
+        self.__warnings = []
 
     def get_name(self):
 
@@ -123,6 +126,19 @@ class MIDS(object):
 
         self.__values[file_name] = mid
 
+    def append_warning(self, warning):
+
+        """
+        @summary: Append warning to the warnings list
+
+        @param warning: Warning text
+        @type warning: StringType
+
+        @author: Milica Ng
+        """
+
+        self.__warnings[len(self.__warnings):] = [warning]
+
     def write(self, out_file):
 
         """
@@ -150,6 +166,7 @@ class MIDS(object):
         fp.write('ion ')
         fp.write(str(self.__ion))
         fp.write('\n')
+        fp.write('MID size = ')
         fp.write(str(self.__mid_size))
 
         fp.write('\n')
@@ -186,7 +203,16 @@ class MIDS(object):
                     fp.write(str(0.0))
                     fp.write(',')
                 fp.write('\n')
-                
+
+        # write warnings
+        warning_list = self.__warnings
+        fp.write('\n')
+        for warning in warning_list:
+            fp.write('\n')
+            fp.write(warning)
+        fp.write('\n')
+        
+        # close the file           
         fp.close()
 
 
