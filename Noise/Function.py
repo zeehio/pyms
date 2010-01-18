@@ -24,7 +24,7 @@ Provides functions for signal noise analysis
 
 import sys, random, copy, math
 
-from pyms.IO.GCMS.Function import is_ionchromatogram
+from pyms.GCMS.Function import is_ionchromatogram
 from pyms.Utils.Error import error
 from pyms.Utils.Time import window_sele_points
 from pyms.Utils.Math import MAD

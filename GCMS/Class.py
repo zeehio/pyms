@@ -964,9 +964,10 @@ class IntensityMatrix(object):
         if mass_min >= mass_max:
             error("'mass_min' must be less than 'mass_max'")
         if mass_min < self.__min_mass:
-            error("'mass_min' is less than the smallest mass: ",self.__min_mass)
+            error("'mass_min' is less than the smallest mass: %.3f" %
+                self.__min_mass)
         if mass_max > self.__max_mass:
-            error("'mass_max' is greater than the smallest mass:", \
+            error("'mass_max' is greater than the smallest mass: %.3f" %
                 self.__min_mass)
 
         # pre build mass_list and list of indecies
@@ -1005,8 +1006,8 @@ class IntensityMatrix(object):
         if not is_number(mass):
             error("'mass' must be numbers")
         if mass < self.__min_mass or mass > self.__max_mass:
-            error("'mass' not in mass range:", self.__min_mass, "to", \
-                self.__max_mass)
+            error("'mass' not in mass range: %.3f to %.3f" % (self.__min_mass, \
+                self.__max_mass))
 
         ii = self.get_index_of_mass(mass)
 
@@ -1149,6 +1150,104 @@ class IntensityMatrix(object):
             fp.write("\r\n")
 
         close_for_writing(fp)
+
+    def import_leco_csv(self, file_name):
+        """
+        @summary: Imports data in LECO CSV format
+
+        @param file_name: File name
+        @type file_name: StringType
+
+        @return: none
+        @rtype: NoneType
+
+        @author: Andrew Isaac
+        """
+
+        if not is_str(file_name):
+            error("'file_name' not a string")
+
+        lines_list = open(file_name,'r')
+        data = []
+        time_list = []
+        mass_list = []
+
+        # Format is text header with:
+        # "Scan","Time",...
+        # and the rest is "TIC" or m/z as text, i.e. "50","51"...
+        # The following lines are:
+        # scan_number,time,value,value,...
+        # scan_number is an int, rest seem to be fixed format floats.
+        # The format is 0.000000e+000
+
+        num_mass = 0
+        FIRST = True
+        HEADER = True
+        data_col = -1
+        time_col = -1
+        # get each line
+        for line in lines_list:
+            cols = -1
+            data_row = []
+            if len(line.strip()) > 0:
+                data_list = line.strip().split(',')
+                # get each value in line
+                for item in data_list:
+                    item = item.strip()
+                    item = item.strip('\'"')  # remove quotes (in header)
+
+                    # Get header
+                    if HEADER:
+                        cols += 1
+                        if len(item) > 0:
+                            if item.lower().find("time") > -1:
+                                time_col = cols
+                            try:
+                                value = float(item)
+                                # find 1st col with number as header
+                                if FIRST and value > 1:  # assume >1 mass
+                                    data_col = cols
+                                    # assume time col is previous col
+                                    if time_col < 0:
+                                        time_col = cols -1
+                                    FIRST = False
+                                mass_list.append(value)
+                                num_mass += 1
+                            except ValueError:
+                                pass
+                    # Get rest
+                    else:
+                        cols += 1
+                        if len(item) > 0:
+                            try:
+                                value = float(item)
+                                if cols == time_col:
+                                    time_list.append(value)
+                                elif cols >= data_col:
+                                    data_row.append(value)
+                            except ValueError:
+                                pass
+
+                # check row length
+                if not HEADER:
+                    if len(data_row) == num_mass:
+                        data.append(data_row)
+                    else:
+                        print ("Warning: ignoring row")
+
+                HEADER = False
+
+        # check col lengths
+        if len(time_list) != len(data):
+            print ("Warning: number of data rows and time list length differ")
+
+        self.__mass_list = mass_list
+        self.__time_list = time_list
+        self.__intensity_matrix = data
+        # Direct access for speed (DANGEROUS)
+        self.intensity_matrix = self.__intensity_matrix
+
+
 
 ## get_ms_at_time()
 

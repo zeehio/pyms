@@ -138,7 +138,7 @@ class Alignment(object):
             error("Cannot open output file for writing")
 
         # write experiment headers
-        header = '"UID", "' + '", "'.join(self.expr_code) + '"\n'
+        header = '"UID", "RTavg", "' + '", "'.join(self.expr_code) + '"\n'
 
         fp_rt.write(header)
         fp_area.write(header)
@@ -148,6 +148,8 @@ class Alignment(object):
             rts = []
             areas = []
             new_peak_list = []
+            avgrt = 0
+            countrt = 0
             for align_idx in range(len(self.peakpos)):
                 peak = self.peakpos[align_idx][peak_idx]
                 if peak is not None:
@@ -158,13 +160,19 @@ class Alignment(object):
                     rts.append('%.3f' % rtmin)
                     areas.append('%.4f' % peak.get_area())
                     new_peak_list.append(peak)
+                    avgrt += rtmin
+                    countrt += 1
                 else:
                     rts.append('NA')
                     areas.append('NA')
 
+            if countrt > 0:
+                avgrt = avgrt/countrt
             new_peak = composite_peak(new_peak_list, minutes)
-            fp_rt.write(new_peak.get_UID()+", "+", ".join(rts) + "\n")
-            fp_area.write(new_peak.get_UID()+", "+", ".join(areas) + "\n")
+            fp_rt.write(new_peak.get_UID() + (", %.3f, " % avgrt) +
+              ", ".join(rts) + "\n")
+            fp_area.write(new_peak.get_UID() + (", %.3f, " % avgrt) +
+              ", ".join(areas) + "\n")
 
         fp_rt.close()
         fp_area.close()

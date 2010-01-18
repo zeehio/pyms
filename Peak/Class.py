@@ -363,10 +363,11 @@ class Peak:
         mass_list = self.__mass_spectrum.mass_list
 
         if mass_min < min(mass_list):
-            error("'mass_min' is less than the smallest mass: ",min(mass_list))
+            error("'mass_min' is less than the smallest mass: %d" \
+              % min(mass_list))
         if mass_max > max(mass_list):
-            error("'mass_max' is greater than the smallest mass:", \
-                max(mass_list))
+            error("'mass_max' is greater than the largest mass: %d" \
+              % max(mass_list))
 
         # pre build mass_list and list of indecies
         new_mass_list = []
