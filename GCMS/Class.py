@@ -1158,8 +1158,8 @@ class IntensityMatrix(object):
         @param file_name: File name
         @type file_name: StringType
 
-        @return: none
-        @rtype: NoneType
+        @return: Data as an IntensityMatrix
+        @rtype: pyms.GCMS.Class.IntensityMatrix
 
         @author: Andrew Isaac
         """
