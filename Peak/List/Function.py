@@ -126,9 +126,9 @@ def fill_peaks(data, peak_list, D, minutes=False):
     rtr = 0
     new_peak_list = []
     for ii in xrange(len(peak_list)):
-        spec = peak_list[ii].mass_spec
+        spec = peak_list[ii].get_mass_spectrum().mass_spec
         spec = numpy.array(spec, dtype='d')
-        rt = peak_list[ii].rt
+        rt = peak_list[ii].get_rt()
         spec_SS = numpy.sum(spec**2, axis=0)
 
         # get neighbour RT's
@@ -139,8 +139,11 @@ def fill_peaks(data, peak_list, D, minutes=False):
         # adjust weighting for neighbours
         rtclose = min(abs(rt-rtl), abs(rt-rtr))
         Dclose = rtclose/math.sqrt(-2.0*math.log(_PEN))
+
         if Dclose > 0:
-            D = min(D, Dclose)
+            Dclose = min(D, Dclose)
+        else:
+            Dclose = D
 
         # Get bounds
         rtlow = rt - cutoff
@@ -175,7 +178,7 @@ def fill_peaks(data, peak_list, D, minutes=False):
         cosarr = toparr/botarr
 
         # RT weight of each scan
-        rtimearr = numpy.exp(-((subrts-rt)/float(D))**2 / 2.0)
+        rtimearr = numpy.exp(-((subrts-rt)/float(Dclose))**2 / 2.0)
 
         # weighted scores
         scorearr = cosarr*rtimearr
