@@ -56,7 +56,7 @@ def BillerBiemann(im, points=3, scans=1):
     @type im: pyms.GCMS.Class.IntensityMatrix
     @param points: Peak if maxima over 'points' number of scans (Default 3)
     @type points: IntType
-    @param scans: To compensate for spectra scewing,
+    @param scans: To compensate for spectra skewing,
         peaks from 'scans' scans are combined (Default 1).
     @type scans: IntType
 
