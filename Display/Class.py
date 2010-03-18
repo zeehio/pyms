@@ -65,12 +65,17 @@ class Display(object):
 	# for TIC
 	self.__col_ic = {0:'r', 1:'g', 2:'k', 3:'y', 4:'m', 5:'c'}
 	self.__col_count = 0  # counter to keep track of colors
+        
+        # Peak list container 
+        self.__peak_list = []
 				
 	#Plotting Variables
 	self.__fig = plt.figure()
 	self.__ax = self.__fig.add_subplot(111)
 
 		
+    
+    
     def plot_ics(self, ics, labels):
 		
 	"""
@@ -109,6 +114,8 @@ class Display(object):
 	    self.__col_count += 1
 	
 	
+    
+    
     def plot_tic(self, tic, label=None):
 	"""
 	@summary: Adds Total Ion Chromatogram to plot list
@@ -130,7 +137,11 @@ class Display(object):
 	self.__tic_ic_plots.append(plt.plot(time_list, intensity_list,\
 	label=label))
 		
-    def plot_peaks(self, peak_list, label):
+    
+    
+    
+    
+    def plot_peaks(self, peak_list, label = "Peaks"):
 	"""
 	@summary: Plots the locations of peaks as found
 		by PyMS.
@@ -144,6 +155,8 @@ class Display(object):
 		
 	time_list = []
 	height_list=[]
+        #copy to self.__peak_list for onclick event handling
+        self.__peak_list = peak_list
 	
 	for peak in peak_list:
 	    time_list.append(peak.get_rt())
@@ -152,7 +165,102 @@ class Display(object):
 	self.__tic_ic_plots.append(plt.plot(time_list, height_list, 'o',\
 	label = label))
 	
-	
+    
+    
+    
+    
+    def get_5_largest(self, intensity_list):
+        """
+        @summary: computes the indices of the largest 5 ion intensities
+                    for writing to console
+        
+        @param intensity_list: List of Ion intensities
+        @type intensity_list: listType
+        """
+        largest = [0,0,0,0,0]
+        
+        # Find out largest value
+        for i in range(len(intensity_list)):
+            if intensity_list[i] > intensity_list[largest[0]]:
+                largest[0] = i
+        
+        # Now find next four largest values
+        for j in [1,2,3,4]:
+            for i in range(len(intensity_list)):
+                if intensity_list[i] > intensity_list[largest[j]] and \
+                intensity_list[i] < intensity_list[largest[j-1]]:
+                    largest[j] = i
+       
+        return largest
+
+    
+    
+    
+    
+    def plot_mass_spec(self, rt, mass_list, intensity_list):
+        """ 
+        @summary: plots the mass spec given a list of masses and intensities
+        
+        @param rt: The retention time for labelling of the plot
+        @type rt: floatType
+        
+        @param mass_list: list of masses of the MassSpectrum object
+        @type mass_list: listType
+        
+        @param intensity_list: List of intensities of the MassSpectrum object
+        @type intensity_list: listType
+        """
+        new_fig = plt.figure()
+        new_ax = new_fig.add_subplot(111)
+        
+        label = "Mass spec for peak at time " + "%5.2f" % rt
+        
+        mass_spec_plot = plt.bar(mass_list, intensity_list,\
+	label=label, width=0.01)
+        
+        t = new_ax.set_title(label)
+        
+        plt.show()
+        
+        
+    
+    
+    def onclick(self, event):
+        """
+        @summary: Finds the 5 highest intensity m/z channels for the selected peak.
+                  The peak is selected by clicking on it. If a button other than
+                  the left one is clicked, a new plot of the mass spectrum is displayed
+                  
+        @param event: a mouse click by the user
+        """
+                    
+        intensity_list = []
+        mass_list = []
+        
+        
+        for peak in self.__peak_list:
+            if event.xdata > 0.9999*peak.get_rt() and event.xdata < \
+            1.0001*peak.get_rt():
+               intensity_list = peak.get_mass_spectrum().mass_spec
+               mass_list = peak.get_mass_spectrum().mass_list
+            
+        largest = self.get_5_largest(intensity_list)
+        
+        if len(intensity_list) != 0:
+            print "mass\t intensity"
+            for i in range(5):
+                print mass_list[largest[i]], "\t", intensity_list[largest[i]]
+        else:    # if the selected point is not close enough to peak
+            print "No Peak at this point"
+        
+        # Check if a button other than left was pressed, if so plot mass spectrum
+        # Also check that a peak was selected, not just whitespace
+        if event.button != 1 and len(intensity_list) != 0:
+            self.plot_mass_spec(event.xdata, mass_list, intensity_list)
+        
+            
+    
+    
     def do_plotting(self, plot_label = None):
 	"""
 	@summary: Plots TIC and IC(s) if they have been created
@@ -172,12 +280,16 @@ class Display(object):
 	    print 'calling do_plotting()'
 	
 	if plot_label != None :
-		t = self.__ax.set_title(plot_label)
+            t = self.__ax.set_title(plot_label)
 	
 	l = self.__ax.legend()
 			
 	self.__fig.canvas.draw
+        
+        # If no peak list plot, no mouse click event
+        if len(self.__peak_list) != 0:
+            cid = self.__fig.canvas.mpl_connect('button_press_event', self.onclick)	
 	plt.show()
 		
-		
+	
 	

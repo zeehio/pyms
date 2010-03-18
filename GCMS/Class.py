@@ -532,8 +532,9 @@ class Scan(object):
         @author: Andrew Isaac
         @author: Vladimir Likic
         """
-
+ 
         return copy.deepcopy(self.__mass_list)
+
 
     def get_intensity_list(self):
 
@@ -547,8 +548,9 @@ class Scan(object):
         @author: Andrew Isaac
         @author: Vladimir Likic
         """
-
+       
         return copy.deepcopy(self.__intensity_list)
+  
 
     def get_min_mass(self):
 
