@@ -76,7 +76,7 @@ class Display(object):
 		
     
     
-    def plot_ics(self, ics, labels):
+    def plot_ics(self, ics, labels = None):
 		
 	"""
 	@summary: Adds an Ion Chromatogram or a 
@@ -106,12 +106,27 @@ class Display(object):
 	for i in range(len(ics)):
 	    intensity_list.append(ics[i].get_intensity_array())
 		
-	for i in range(len(ics)):	
+	
+        #Case for labels not present, followed by labels present
+        if labels == None:
+            for i in range(len(ics)):
+                self.__tic_ic_plots.append(plt.plot(time_list, \
+	        intensity_list[i], self.__col_ic[self.__col_count]))
+	        if self.__col_count == 5:
+                    self.__col_count = 0
+                else:
+                    self.__col_count += 1
+        
+        else:
+            for i in range(len(ics)):	
 		
-	    self.__tic_ic_plots.append(plt.plot(time_list, \
-	    intensity_list[i], self.__col_ic[self.__col_count]\
-	    , label = labels[i]))
-	    self.__col_count += 1
+	        self.__tic_ic_plots.append(plt.plot(time_list, \
+	        intensity_list[i], self.__col_ic[self.__col_count]\
+	        , label = labels[i]))
+	        if self.__col_count == 5:
+                    self.__col_count = 0
+                else:
+                    self.__col_count += 1
 	
 	
     
@@ -152,6 +167,9 @@ class Display(object):
 	@param label: label for plot legend
 	@type label: string type
 	"""
+        
+        if not isinstance(peak_list, list):
+            error("peak_list is not a list")
 		
 	time_list = []
 	height_list=[]
