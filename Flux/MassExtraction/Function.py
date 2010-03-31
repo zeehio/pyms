@@ -322,7 +322,7 @@ def extract_mid(file_name, im, mids, win_size, noise):
              j = j+1
 
         # plot for testing purposes only. to be deleted! 
-        plot_ics(ic_list, ave_left_ix, ave_right_ix, file_name, compound, noise)
+        # plot_ics(ic_list, ave_left_ix, ave_right_ix, file_name, compound, noise)
 
         # calculate mass isotopomer distribution in the current file
         mid = calculate_mid(ic_list, ave_left_ix, ave_right_ix)
