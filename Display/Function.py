@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import sys
 sys.path.append('/x/PyMS/')
 
-
+from pyms.Utils.Error import error
 from pyms.GCMS.Class import IonChromatogram 
 
 
@@ -34,11 +34,12 @@ def plot_ics(ics, legend=None, label=None):
     ax = fig.add_subplot(111)
     
     if not isinstance(ics, list):
-	    if isinstance(ics, IonChromatogram):
+        if isinstance(ics, IonChromatogram):
 		ics = [ics]
-    else:
-        error("ics argument must be an IonChromatogram\
-        or a list of Ion Chromatograms")
+
+        else:
+            error("ics argument must be an IonChromatogram\
+            or a list of Ion Chromatograms")
     # TODO: take care of case where one element of ics is
     # not an IonChromatogram
     

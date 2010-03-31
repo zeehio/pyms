@@ -95,7 +95,10 @@ class Display(object):
 	    else:
 		error("ics argument must be an IonChromatogram\
 		or a list of Ion Chromatograms")
-	# TODO: take care of case where one element of ics is
+	
+        if not isinstance(labels, list) and labels != None:
+            labels = [labels]
+        # TODO: take care of case where one element of ics is
 	# not an IonChromatogram
 		
 	
@@ -231,10 +234,24 @@ class Display(object):
         new_fig = plt.figure()
         new_ax = new_fig.add_subplot(111)
         
+        # to set x axis range find minimum and maximum m/z channels
+        max_mz = mass_list[0]
+        min_mz = mass_list[0]
+        
+        for i in range(len(mass_list)):
+            if mass_list[i] > max_mz:
+                max_mz = mass_list[i]
+                
+        for i in range(len(mass_list)):
+            if mass_list[i] < min_mz:
+                min_mz = mass_list[i]
+        
         label = "Mass spec for peak at time " + "%5.2f" % rt
         
         mass_spec_plot = plt.bar(mass_list, intensity_list,\
 	label=label, width=0.01)
+        
+        x_axis_range = plt.xlim(min_mz, max_mz)
         
         t = new_ax.set_title(label)
         
