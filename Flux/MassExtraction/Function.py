@@ -90,7 +90,11 @@ def left_boundary(ic, peak_apex_ix, peak_apex_int):
     left_boundary_int = peak_apex_int
     ix = peak_apex_ix
     while ix >= 0:
-        if ic.get_intensity_at_index(ix) > left_boundary_int:
+        # print 'ic.get_intensity_at_index(ix)', ic.get_intensity_at_index(ix), 'left_boundary_int', left_boundary_int
+        
+        if ic.get_intensity_at_index(ix) > left_boundary_int or 0 == left_boundary_int:
+            # print 'broke on left'
+            # print 'ic.get_intensity_at_index(ix+1)', ic.get_intensity_at_index(ix+1),'left_boundary_int', left_boundary_int
             break
         else:
             left_boundary_int = ic.get_intensity_at_index(ix)
@@ -122,7 +126,10 @@ def right_boundary(ic, peak_apex_ix, peak_apex_int):
     right_boundary_int = peak_apex_int
     ix = peak_apex_ix
     while ix < len(ic):
-        if ic.get_intensity_at_index(ix) > right_boundary_int:
+        # print 'ic.get_intensity_at_index(ix)', ic.get_intensity_at_index(ix),'right_boundary_int', right_boundary_int
+        if ic.get_intensity_at_index(ix) > right_boundary_int or 0 == right_boundary_int:
+            # print ' broke on right'
+            # print 'ic.get_intensity_at_index(ix+1)', ic.get_intensity_at_index(ix+1), 'right_boundary_int', right_boundary_int
             break
         else:
             right_boundary_int = ic.get_intensity_at_index(ix)
@@ -269,8 +276,12 @@ def extract_mid(file_name, im, mids, win_size, noise):
             if ic.get_intensity_at_index(peak_apex_ix) < ic.get_intensity_at_index(peak_apex_ix-1):
                 warning = 'Warning: '+compound+' '+str(file_name)+' '+str(mz)+' An intensity > peak apex on the LEFT'
                 mids.append_warning(warning)
-            if ic.get_intensity_at_index(peak_apex_ix) < ic.get_intensity_at_index(peak_apex_ix+1):
+            elif ic.get_intensity_at_index(peak_apex_ix) < ic.get_intensity_at_index(peak_apex_ix+1):
                 warning = 'Warning: '+compound+' '+str(file_name)+' '+str(mz)+' An intensity > peak apex on the RIGHT'
+                mids.append_warning(warning)
+            # raise warning if peak apex equals both neighbouring intensities 
+            elif (ic.get_intensity_at_index(peak_apex_ix) == ic.get_intensity_at_index(peak_apex_ix-1)) and (ic.get_intensity_at_index(peak_apex_ix) == ic.get_intensity_at_index(peak_apex_ix+1)):
+                warning = 'Warning: '+compound+' '+str(file_name)+' '+str(mz)+' Peak apex intensity EQUALS neighbouring left and right intensity'
                 mids.append_warning(warning)
 
             # sum left and right boundary indices above noise in the current file
@@ -278,7 +289,12 @@ def extract_mid(file_name, im, mids, win_size, noise):
             right_boundary_sum = right_boundary_sum + right_boundary_ix
             sum_count = sum_count + 1
 
+            # collect left and right boundaries for standard deviation later
+            # left_boundary_ix_list.append(left_boundary_ix)
+            # right_boundary_ix_list.append(right_boundary_ix)
+
     if sum_count > 0:
+
 
         # raise warning if peak boundaries belonging to a single peak were used as average
         if sum_count == 1:
@@ -288,6 +304,11 @@ def extract_mid(file_name, im, mids, win_size, noise):
         # find average of left and right boundary index in the current file
         ave_left_ix = left_boundary_sum/sum_count
         ave_right_ix = right_boundary_sum/sum_count
+
+        # raise warning if rt is not between ave left and right boundary
+        if (rt < ave_left_ix) and (rt > ave_right_ix):
+            warning = 'Warning: '+compound+' '+str(file_name)+' Retention time is outside the integration interval'
+            mids.append_warning(warning)
 
         # raise warning if an intensity larger than noise is found where peak apex is smaller than noise
         j = 0
