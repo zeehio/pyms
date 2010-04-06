@@ -161,10 +161,10 @@ def file_lines(file_name):
         error("'file_name' is not a string")
 
     fp = open_for_reading(file_name)
-    file_lines = fp.readlines()
+    lines = fp.readlines()
     close_for_reading(fp)
 
-    return file_lines
+    return lines
 
 def save_data(file_name, data, format_str="%.6f", prepend="", sep=" ",
 	compressed=False):
