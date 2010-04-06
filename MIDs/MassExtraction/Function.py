@@ -24,7 +24,7 @@ Functions for Flux.MassExtract
  #############################################################################
 
 
-from pyms.MID.Class import MID
+from pyms.MIDs.Class import MID
 from pyms.Noise.SavitzkyGolay import savitzky_golay
 from pyms.Baseline.TopHat import tophat
 
