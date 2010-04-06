@@ -25,27 +25,44 @@ Provides helper functions for MIDs processing
 from pyms.Utils.Error import error
 from pyms.MID.Class import MIDS
 from pyms.Utils.IO import file_lines
+from pyms.Utils.Time import time_str_secs
 
 def parse_input(in_file):
 
-    lines = file_lines(in_file, filter=True)
+    """
+    @summary:
 
-    print lines
-    raise RuntimeError
-    
+    @param in_file:
+    @type in_file: StringType
+
+    @return: the list of ...
+    @rtype: ListType
+
+    @author: Milica Ng
+    @author: Vladimir Likic
+    """
+
+    lines = file_lines(in_file, filter=True)
     mids_list = []
 
     for line in lines:
 
-        # parse input file
+        # parse input lines
         items = line.split(',')
-        name = str(items[0])
-        rt = float(items[1])*60 # convert to seconds
-        ion = int(items[2])
+
+        # each MID specification must have exactly 4 elements
+        if len(items) != 4:
+            print "\n Input file: ", in_file
+            print " Line: ", line
+            error("A MID specification must have exactly 4 elements")
+
+        metabolite_name = items[0]
+        rt = time_str_secs(items[1]) # convert to seconds
+        diagnostic_ion = int(items[2])
         mid_size = int(items[3])
 
         # set compound name, retention time, diagnostic ions and MID size
-        mids = MIDS(name, rt, ion, mid_size)
+        mids = MIDS(metabolite_name, rt, diagnostic_ion, mid_size)
 
         # store mids in mids_list
         mids_list.append(mids)
