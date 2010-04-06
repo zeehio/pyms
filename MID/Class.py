@@ -114,7 +114,7 @@ class MIDS(object):
         """
         @summary: Set the MID values for an ion inside a particular file
 
-        @param mid: Mass isotoomer distribution (MID) values
+        @param mid: Mass isotopomer distribution (MID) values
         @type mid: ListType
         @param ion: Diagnostic ion
         @type ion: IntType
