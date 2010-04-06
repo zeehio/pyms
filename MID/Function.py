@@ -28,13 +28,17 @@ from pyms.Utils.IO import file_lines
 
 def parse_input(in_file):
 
-    lines = file_lines(in_file)
+    lines = file_lines(in_file, filter=True)
+
+    print lines
+    raise RuntimeError
+    
     mids_list = []
 
     for line in lines:
 
         # parse input file
-        items =line.split(',')
+        items = line.split(',')
         name = str(items[0])
         rt = float(items[1])*60 # convert to seconds
         ion = int(items[2])

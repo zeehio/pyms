@@ -143,13 +143,17 @@ def close_for_writing(fp):
 
     fp.close()
 
-def file_lines(file_name):
+def file_lines(file_name, filter=False):
 
     """
     @summary: Returns lines from a file, as a list
 
     @param file_name: Name of a file
     @type: StringType
+    @param filter: If True, lines are pre-processes. Newline character
+        if removed, leading and taling whitespaces are removed, and lines
+        starting with '#' are discarded
+    @type: BooleanType 
 
     @return: A list of lines
     @rtype: ListType
@@ -163,6 +167,24 @@ def file_lines(file_name):
     fp = open_for_reading(file_name)
     lines = fp.readlines()
     close_for_reading(fp)
+
+    if filter:
+        # remove the newline character, strip leading and
+        # talining whitespaces
+        lines_filtered = []
+        for line in lines:
+            line = line.rstrip('\n')
+            line.strip()
+            lines_filtered.append(line)
+
+        # discard comments
+        lines_to_discard = []
+        for line in lines_filtered:
+            if line[0] == "#":
+                lines_to_discard.append(line)
+        for line in lines_to_discard:
+            lines_filtered.remove(line)
+        lines = lines_filtered
 
     return lines
 
