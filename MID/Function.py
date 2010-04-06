@@ -1,5 +1,5 @@
 """
-Provides helper functions for MIDs processing
+Provides helper functions for MID processing
 """
 
  #############################################################################
@@ -27,7 +27,7 @@ from pyms.MID.Class import MIDS
 from pyms.Utils.IO import file_lines
 from pyms.Utils.Time import time_str_secs
 
-def parse_input(in_file):
+def parse_ion_defs(in_file):
 
     """
     @summary:
@@ -68,4 +68,28 @@ def parse_input(in_file):
         mids_list.append(mids)
 
     return mids_list
+
+
+def parse_data_defs(in_file):
+
+    """
+    @summary:
+
+    @param in_file:
+    @type in_file: StringType
+
+    @return: the list of ...
+    @rtype: ListType
+
+    @author: Milica Ng
+    @author: Vladimir Likic
+    """
+
+    lines = file_lines(in_file, filter=True)
+
+    data_files = []  
+    for line in lines:
+        data_files.append(line)
+
+    return data_files
 
