@@ -23,7 +23,7 @@ Provides helper functions for MID processing
  #############################################################################
 
 from pyms.Utils.Error import error
-from pyms.MID.Class import MID
+from pyms.MIDs.Class import MID
 from pyms.Utils.IO import file_lines
 from pyms.Utils.Time import time_str_secs
 
