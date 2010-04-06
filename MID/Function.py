@@ -23,5 +23,28 @@ Provides helper functions for MIDs processing
  #############################################################################
 
 from pyms.Utils.Error import error
+from pyms.MID.Class import MIDS
+from pyms.Utils.IO import file_lines
 
+def parse_input(in_file):
+
+    lines = file_lines(in_file)
+    mids_list = []
+
+    for line in lines:
+
+        # parse input file
+        items =line.split(',')
+        name = str(items[0])
+        rt = float(items[1])*60 # convert to seconds
+        ion = int(items[2])
+        mid_size = int(items[3])
+
+        # set compound name, retention time, diagnostic ions and MID size
+        mids = MIDS(name, rt, ion, mid_size)
+
+        # store mids in mids_list
+        mids_list.append(mids)
+
+    return mids_list
 
