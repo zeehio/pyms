@@ -139,10 +139,10 @@ def right_boundary(ic, peak_apex_ix, peak_apex_int):
     return right_boundary_ix
 
 
-def calculate_mid(ic_list, ave_left_ix, ave_right_ix):
+def calculate_mdv(ic_list, ave_left_ix, ave_right_ix):
 
     """
-    @summary: Calculate mass isotopomer distribution
+    @summary: Calculate mass isotopomer distribution vector
 
     @param ic_list: List of IonChromatograms
     @type ic_list: ListType
@@ -151,14 +151,14 @@ def calculate_mid(ic_list, ave_left_ix, ave_right_ix):
     @param ave_right_ix: Average right boundary index for the ions
     @type ave_right_ix: IntType
     
-    @return: None
-    @rtype: NoneType
+    @return: Mass isotopomer distribution vector
+    @rtype: ListType
     
     @author: Milica Ng
     """
 
     # calculate mass isotopomer distribution
-    mid = []
+    mdv = []
     for ic in ic_list:
         # get ion chromatogram at specified m/z
         # ic = im.get_ic_at_mass(mz)
@@ -166,9 +166,9 @@ def calculate_mid(ic_list, ave_left_ix, ave_right_ix):
         # integrate (sum intensity from average left_boundary_ix to average right_boundary_ix 
         for ix in range(ave_left_ix, ave_right_ix+1):
             area = area + ic.get_intensity_at_index(ix)
-        mid.append(area)
+        mdv.append(area)
 
-    return mid
+    return mdv
 
 def plot_ics(ic_list, ave_left_ix, ave_right_ix, file_name, compound, noise):
 
@@ -199,7 +199,7 @@ def plot_ics(ic_list, ave_left_ix, ave_right_ix, file_name, compound, noise):
         close()
 
 
-def extract_mid(file_name, im, mids, win_size, noise):
+def extract_mid(mids, file_name, im, win_size, noise):
 
     """
     @summary: Method for extracting mass isotopomer distribution (MID)
@@ -210,24 +210,21 @@ def extract_mid(file_name, im, mids, win_size, noise):
     @type im: pyms.GCMS.Class.IntensityMatrix
     @param mids: Mass isotopomer distribution data
     @type mids: pyms.Flux.Class.MIDS
-    @param mid_size: Size of the mass distribution vector
-    @type mid_size: IntType
+    @param mdv_size: Size of the mass distribution vector
+    @type mdv_size: IntType
     @param win_size: Size of the window for local maximum search
     @type win_size: FloatType
     @param noise: Noise threshold below which signal is assumed unreliable
     @type win_size: IntType
-
-    @return: Mass isotopomer distribution data
-    @rtype: pyms.Flux.Class.MIDS
     
     @author: Milica Ng
     """
     
-    # get name, rt, ion and MID size
-    compound = mids.get_name()
+    # get compound name, rt, ion and mdv size
+    compound = mids.get_compound_name()
     rt = mids.get_rt()
     ion = mids.get_ion()
-    mid_size = mids.get_mid_size()
+    mdv_size = mids.get_mdv_size()
 
     # initialise loop variables
     left_boundary_sum = 0
@@ -238,7 +235,7 @@ def extract_mid(file_name, im, mids, win_size, noise):
     peak_apex_intensity_list = []
 
     # loop over required number of mass isotopomers
-    for mz in range(ion, ion+mid_size):
+    for mz in range(ion, ion+mdv_size):
 
         # get ion chromatogram at current m/z
         # todo: check if mass is out of range, raise an error!
@@ -249,7 +246,7 @@ def extract_mid(file_name, im, mids, win_size, noise):
         ic_bc = tophat(ic_smooth, struct="1.5m")
         ic = ic_bc
 
-        # store ic's for calculate_mid later
+        # store ic's for calculate_mdv later
         ic_list.append(ic)
 
         # get peak apex index and intensity
@@ -325,16 +322,12 @@ def extract_mid(file_name, im, mids, win_size, noise):
         # plot_ics(ic_list, ave_left_ix, ave_right_ix, file_name, compound, noise)
 
         # calculate mass isotopomer distribution in the current file
-        mid = calculate_mid(ic_list, ave_left_ix, ave_right_ix)
-
-        # store mass isotopomer distribution inside mids variable
-        mids.set_values(mid, file_name)
+        mdv = calculate_mdv(ic_list, ave_left_ix, ave_right_ix)
             
     else:
+        mdv = [0] * mdv_size
 
-        mid = [0] * mid_size
+    # store mass isotopomer distribution inside mids variable
+    mids.set_values(mdv, file_name)
 
-        # store mass isotopomer distribution inside mids variable
-        mids.set_values(mid, file_name)
 
-    return mids

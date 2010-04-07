@@ -35,7 +35,7 @@ def parse_ion_defs(in_file):
     @param in_file: The name of the file containing ion definitions
     @type in_file: StringType
 
-    @return: The list of MID objects with metabolite names, 
+    @return: The list of MID objects with compound names, 
         retention times, diagnostic ions and MID sizes set
     @rtype: ListType
 
@@ -57,13 +57,13 @@ def parse_ion_defs(in_file):
             print " Line: ", line
             error("A MID specification must have exactly 4 elements")
 
-        metabolite_name = items[0]
+        compound_name = items[0]
         rt = time_str_secs(items[1]) # convert to seconds
         diagnostic_ion = int(items[2])
-        mid_size = int(items[3])
+        mdv_size = int(items[3])
 
         # set compound name, retention time, diagnostic ions and MID size
-        mids = MID(metabolite_name, rt, diagnostic_ion, mid_size)
+        mids = MID(compound_name, rt, diagnostic_ion, mdv_size)
 
         # store mids in mids_list
         mids_list.append(mids)
@@ -75,7 +75,7 @@ def parse_data_defs(in_file):
     """
     @summary: Read data file names and return as a list
 
-    @param in_file: The nae of the file containing data file names
+    @param in_file: The name of the file containing data file names
     @type in_file: StringType
 
     @return: The list of data file names

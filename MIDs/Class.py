@@ -31,33 +31,33 @@ class MID(object):
     @author: Milica Ng
     """
 
-    def __init__(self, name, rt, ion, mid_size):
+    def __init__(self, compound_name, rt, ion, mdv_size):
         
         """
         @summary: Initialise the MIDS data object
 
-        @param name: Name of the compound
-        @type name: StringType
+        @param compound_name: Name of the compound
+        @type compound_name: StringType
         @param rt: Chromatographic retention time
         @type rt: FloatType
-        @param ion_list: Diagnostic ions
-        @type ion_list: IntType
-        @param mid_size: total number of masses (n+1 for M, M+1, ..., M+n)
-        @type mid_size: IntType
+        @param ion: Diagnostic ion
+        @type ion: IntType
+        @param mdv_size: total number of masses (n+1 for M, M+1, ..., M+n)
+        @type mdv_size: IntType
         @param warnings: Warnings list
         @type warnings: ListType
 
         @author: Milica Ng
         """
         
-        self.__name = name
+        self.__compound_name = compound_name
         self.__rt = rt
         self.__ion = ion
-        self.__mid_size = mid_size
+        self.__mdv_size = mdv_size
         self.__values = {}
         self.__warnings = []
 
-    def get_name(self):
+    def get_compound_name(self):
 
         """
         @summary: Return the compound name
@@ -68,7 +68,7 @@ class MID(object):
         @author: Milica Ng
         """
 
-        return self.__name
+        return self.__compound_name
 
     def get_rt(self):
 
@@ -96,18 +96,18 @@ class MID(object):
 
         return self.__ion
 
-    def get_mid_size(self):
+    def get_mdv_size(self):
 
         """
-        @summary: Return MID size
+        @summary: Return MDV size
 
-        @return: Mass isotopomer distribution size
+        @return: Mass isotopomer distribution vector size
         @rtype: IntType
 
         @author: Milica Ng
         """
 
-        return self.__mid_size
+        return self.__mdv_size
 
     def set_values(self, mid, file_name):
 
@@ -144,16 +144,16 @@ class MID(object):
         """
         @summary: Write MID data to a file
 
-        @param name: Name of the output file
-        @type name: StringType
+        @param out_file: Name of the output file
+        @type out_file: StringType
 
         @author: Milica Ng
         """
 
-        # write a header (name and retention time)
+        # write a header (compound name and retention time)
         fp = open(out_file, 'a')
         fp.write('\n')
-        fp.write(self.__name)
+        fp.write(self.__compound_name)
         fp.write('\n')
         fp.write('rt = ')
         fp.write(str(self.__rt))
@@ -166,15 +166,15 @@ class MID(object):
         fp.write('ion ')
         fp.write(str(self.__ion))
         fp.write('\n')
-        fp.write('MID size = ')
-        fp.write(str(self.__mid_size))
+        fp.write('mdv size = ')
+        fp.write(str(self.__mdv_size))
 
         fp.write('\n')
 
         # write column names
         fp.write('file name')
         fp.write(',')
-        for m in range(0,self.__mid_size):
+        for m in range(0,self.__mdv_size):
             fp.write('M+')
             fp.write(str(m))
             fp.write(',')            
