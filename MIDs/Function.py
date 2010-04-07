@@ -30,12 +30,13 @@ from pyms.Utils.Time import time_str_secs
 def parse_ion_defs(in_file):
 
     """
-    @summary:
+    @summary: Read ion definitions and return as a list of MID objects
 
-    @param in_file:
+    @param in_file: The name of the file containing ion definitions
     @type in_file: StringType
 
-    @return: the list of ...
+    @return: The list of MID objects with metabolite names, 
+        retention times, diagnostic ions and MID sizes set
     @rtype: ListType
 
     @author: Milica Ng
@@ -72,12 +73,12 @@ def parse_ion_defs(in_file):
 def parse_data_defs(in_file):
 
     """
-    @summary:
+    @summary: Read data file names and return as a list
 
-    @param in_file:
+    @param in_file: The nae of the file containing data file names
     @type in_file: StringType
 
-    @return: the list of ...
+    @return: The list of data file names
     @rtype: ListType
 
     @author: Milica Ng
