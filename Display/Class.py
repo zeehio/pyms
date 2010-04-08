@@ -5,7 +5,7 @@ Class to Display Ion Chromatograms and TIC
 #############################################################################
 #                                                                           #
 #    PyMS software for processing of metabolomic mass-spectrometry data     #
-#    Copyright (C) 2005-2010 Vladimir Likic                                 #
+#    Copyright (C) 2005-2010 Vladimir Likic                                    #
 #                                                                           #
 #    This program is free software; you can redistribute it and/or modify   #
 #    it under the terms of the GNU General Public License version 2 as      #
@@ -31,31 +31,25 @@ import numpy
 import sys
 sys.path.append('/x/PyMS/')
 
-
 from pyms.GCMS.Class import IonChromatogram 
-
+from pyms.Utils.Error import error
 
 
 
 class Display(object):
     """
     @summary: Class to display Ion Chromatograms and Total
-    Ion Chromatograms from GCMS.Class.IonChromatogram
+              Ion Chromatograms from GCMS.Class.IonChromatogram
 		
-    Uses matplotlib module pyplot to do plotting
+              Uses matplotlib module pyplot to do plotting
 
     @author: Sean O'Callaghan
     @author: Vladimir Likic
     """
-	
-	
-	
-	
+    	
     def __init__(self):
-        """		
-	@summary: Initialises an instance of Display class
-		
-		
+        """	
+        @summary: Initialises an instance of Display class
 	"""
 		
 	# Container to store plots
@@ -79,17 +73,18 @@ class Display(object):
     def plot_ics(self, ics, labels = None):
 		
 	"""
-	@summary: Adds an Ion Chromatogram or a 
+        @summary: Adds an Ion Chromatogram or a 
 	list of Ion Chromatograms to plot list
 	
 	@param ics: List of Ion Chromatograms m/z channels
 		for plotting
-	@type ics: list of pyms.GCMS.Class.IonChromatogram Object
+	@type ics: list of pyms.GCMS.Class.IonChromatogram 
 	
 	@param labels: Labels for plot legend
-	@type labels: list of strings
-	"""
-	if not isinstance(ics, list):
+	@type labels: list of StringType
+        """
+	
+        if not isinstance(ics, list):
 	    if isinstance(ics, IonChromatogram):
 		ics = [ics]
 	    else:
@@ -110,22 +105,23 @@ class Display(object):
 	    intensity_list.append(ics[i].get_intensity_array())
 		
 	
-        #Case for labels not present, followed by labels present
+        # Case for labels not present
         if labels == None:
             for i in range(len(ics)):
                 self.__tic_ic_plots.append(plt.plot(time_list, \
-	        intensity_list[i], self.__col_ic[self.__col_count]))
+	            intensity_list[i], self.__col_ic[self.__col_count]))
 	        if self.__col_count == 5:
                     self.__col_count = 0
                 else:
                     self.__col_count += 1
         
+        # Case for labels present
         else:
             for i in range(len(ics)):	
 		
 	        self.__tic_ic_plots.append(plt.plot(time_list, \
-	        intensity_list[i], self.__col_ic[self.__col_count]\
-	        , label = labels[i]))
+	            intensity_list[i], self.__col_ic[self.__col_count]\
+	                , label = labels[i]))
 	        if self.__col_count == 5:
                     self.__col_count = 0
                 else:
@@ -135,15 +131,16 @@ class Display(object):
     
     
     def plot_tic(self, tic, label=None):
-	"""
-	@summary: Adds Total Ion Chromatogram to plot list
+	
+        """
+        @summary: Adds Total Ion Chromatogram to plot list
 	
 	@param tic: Total Ion Chromatogram 
-	@type tic: pyms.GCMS.Class.IonChromatogram Object
+	@type tic: pyms.GCMS.Class.IonChromatogram
 	
 	@param label: label for plot legend
-	@type label: string
-	"""
+	@type label: StringType
+        """
 		
 	if not isinstance(tic, IonChromatogram):
 	    error("TIC is not an Ion Chromatogram object")
@@ -160,23 +157,25 @@ class Display(object):
     
     
     def plot_peaks(self, peak_list, label = "Peaks"):
-	"""
-	@summary: Plots the locations of peaks as found
-		by PyMS.
+	
+        """
+        @summary: Plots the locations of peaks as found
+		  by PyMS.
 		
 	@param peak_list: List of peaks
-	@type peak_list: list of pyms.Peak.Class.Peak objects
+	@type peak_list: list of pyms.Peak.Class.Peak
 		
 	@param label: label for plot legend
-	@type label: string type
-	"""
+	@type label: StringType
+        """
         
         if not isinstance(peak_list, list):
             error("peak_list is not a list")
 		
 	time_list = []
 	height_list=[]
-        #copy to self.__peak_list for onclick event handling
+        
+        # Copy to self.__peak_list for onclick event handling
         self.__peak_list = peak_list
 	
 	for peak in peak_list:
@@ -184,20 +183,22 @@ class Display(object):
 	    height_list.append(sum(peak.get_mass_spectrum().mass_spec))
 		
 	self.__tic_ic_plots.append(plt.plot(time_list, height_list, 'o',\
-	label = label))
+	    label = label))
 	
     
     
     
     
     def get_5_largest(self, intensity_list):
+        
         """
-        @summary: computes the indices of the largest 5 ion intensities
-                    for writing to console
+        @summary: Computes the indices of the largest 5 ion intensities
+                  for writing to console
         
         @param intensity_list: List of Ion intensities
         @type intensity_list: listType
         """
+        
         largest = [0,0,0,0,0]
         
         # Find out largest value
@@ -209,7 +210,7 @@ class Display(object):
         for j in [1,2,3,4]:
             for i in range(len(intensity_list)):
                 if intensity_list[i] > intensity_list[largest[j]] and \
-                intensity_list[i] < intensity_list[largest[j-1]]:
+                    intensity_list[i] < intensity_list[largest[j-1]]:
                     largest[j] = i
        
         return largest
@@ -219,8 +220,9 @@ class Display(object):
     
     
     def plot_mass_spec(self, rt, mass_list, intensity_list):
+        
         """ 
-        @summary: plots the mass spec given a list of masses and intensities
+        @summary: Plots the mass spec given a list of masses and intensities
         
         @param rt: The retention time for labelling of the plot
         @type rt: floatType
@@ -231,6 +233,7 @@ class Display(object):
         @param intensity_list: List of intensities of the MassSpectrum object
         @type intensity_list: listType
         """
+        
         new_fig = plt.figure()
         new_ax = new_fig.add_subplot(111)
         
@@ -261,6 +264,7 @@ class Display(object):
     
     
     def onclick(self, event):
+        
         """
         @summary: Finds the 5 highest intensity m/z channels for the selected peak.
                   The peak is selected by clicking on it. If a button other than
@@ -275,9 +279,9 @@ class Display(object):
         
         for peak in self.__peak_list:
             if event.xdata > 0.9999*peak.get_rt() and event.xdata < \
-            1.0001*peak.get_rt():
-               intensity_list = peak.get_mass_spectrum().mass_spec
-               mass_list = peak.get_mass_spectrum().mass_list
+                1.0001*peak.get_rt():
+                intensity_list = peak.get_mass_spectrum().mass_spec
+                mass_list = peak.get_mass_spectrum().mass_list
             
         largest = self.get_5_largest(intensity_list)
         
@@ -297,14 +301,15 @@ class Display(object):
     
     
     def do_plotting(self, plot_label = None):
-	"""
+	
+        """
 	@summary: Plots TIC and IC(s) if they have been created
 		by plot_tic() or plot_ics(). Adds detected peaks
 		if they have been added by plot_peaks()
 		
 	@param plot_label: Optional to supply a label or other
 			definition of data origin
-	@type plot_label: string type
+	@type plot_label: StringType
 	
 	"""
 	

@@ -7,66 +7,78 @@ from pyms.Utils.Error import error
 from pyms.GCMS.Class import IonChromatogram 
 
 
-def plot_ics(ics, legend=None, label=None):
+def plot_ic(ic, line_label=" ", plot_title=" "):
     """
     @summary: Plots an Ion Chromatogram or List of same
     
-    @param ics: The ion chromatogram or list of same
-    @type ics: pyms.GCMS.Class.IonChromatogram
+    @param ic: The ion chromatogram
+    @type ic: pyms.GCMS.Class.IonChromatogram
     
-    @param legend: Information for plot legend
-    @type legend: String or list of strings
+    @param line_label: plot legend
+    @type line_label: stringType
     
-    @param label: A label for the plot
-    @type label: String Type
+    @param plot_title: A label for the plot
+    @type plot_title: String Type
     """
-    
-    # Container to store plots
-    ic_plots = []
-    		
-    # color dictionary for plotting of ics; blue reserved
-    # for TIC
-    col_ic = {0:'b', 1:'r', 2:'g', 3:'k', 4:'y', 5:'m', 6:'c'}
-   
     			
     #Plotting Variables
     fig = plt.figure()
     ax = fig.add_subplot(111)
     
-    if not isinstance(ics, list):
-        if isinstance(ics, IonChromatogram):
-		ics = [ics]
-
-        else:
-            error("ics argument must be an IonChromatogram\
+   
+    if not isinstance(ic, IonChromatogram):
+	error("ics argument must be an IonChromatogram\
             or a list of Ion Chromatograms")
-    # TODO: take care of case where one element of ics is
-    # not an IonChromatogram
-    
-    if not isinstance(legend, list):
-        legend = [legend]
-		
-	
-    intensity_list = []
-    time_list = ics[0].get_time_list()
+
+    time_list = ic.get_time_list()
 			
 	
-    for i in range(len(ics)):
-        intensity_list.append(ics[i].get_intensity_array())
+    
+    intensity_list = ic.get_intensity_array()
     	
-    for i in range(len(ics)):	
-    	
-        ic_plots.append(plt.plot(time_list, \
-        intensity_list[i], col_ic[i]\
-        , label = legend[i]))
+    ic_plot = plt.plot(time_list, intensity_list, label=line_label)
         
-        
-        
-    if label != None :
-	t = ax.set_title(label)
-	
+    t = ax.set_title(plot_title)
     l = ax.legend()
 			
     fig.canvas.draw
     plt.show()
     
+    
+    
+def plot_ms(mass_spec, plot_title=" "):
+        
+    """ 
+    @summary: Plots the mass spec given a list of masses and intensities
+        
+    @param mass_spec: The mass spectrum at a given time/index
+    @type mass_spec: GCMS.Class.MassSpectrum
+        
+    @param plot_title: A label for the plot
+    @type plot_title: String Type
+    """
+        
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+        
+    mass_list = mass_spec.mass_list
+    intensity_list = mass_spec.mass_spec
+        
+    # to set x axis range find minimum and maximum m/z channels
+    max_mz = mass_list[0]
+    min_mz = mass_list[0]
+        
+    for i in range(len(mass_list)):
+        if mass_list[i] > max_mz:
+            max_mz = mass_list[i]
+                
+    for i in range(len(mass_list)):
+        if mass_list[i] < min_mz:
+            min_mz = mass_list[i]
+        
+    mass_spec_plot = plt.bar(mass_list, intensity_list,\
+        width=0.01)
+        
+    x_axis_range = plt.xlim(min_mz, max_mz)
+    t = ax.set_title(plot_title)
+    plt.show()
