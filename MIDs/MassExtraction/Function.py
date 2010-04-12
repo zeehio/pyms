@@ -24,7 +24,7 @@ Functions for Flux.MassExtract
  #############################################################################
 
 
-from pyms.MIDs.Class import MID
+from pyms.MIDs.Class import MID_table
 from pyms.Noise.SavitzkyGolay import savitzky_golay
 from pyms.Baseline.TopHat import tophat
 
@@ -170,6 +170,104 @@ def calculate_mdv(ic_list, ave_left_ix, ave_right_ix):
 
     return mdv
 
+def check_peak_apex(ic, mid_table, peak_apex_time_list, peak_apex_ix, mz, file_name, win_size): 
+
+    """
+    @summary: Perform peak sanity checks for detected peak apex
+
+    @param ic: Ion Chromatogram
+    @type ic: pyms.GCMS.Class.IonChromatogram
+    @param mid_table: pyms.MIDs.Class.MID_table
+    @type ic: pyms.MIDs.Class.MID_table
+    @param peak_apex_time_list: List of peak apex rt's collected so far
+    @type peak_apex_time_list: ListType
+    @param peak_apex_ix: Peak apex index
+    @type peak_apex_ix: IntType
+    @param mz: Mass to charge ratio (m/z)
+    @type mz: IntType
+    @param file_name: The name of the current file
+    @type file_name: StringType
+    @param win_size: Time retention window parameter
+    @type win_size: FloatType
+    
+    @return: None
+    @rtype: NoneType
+    
+    @author: Milica Ng
+    """
+
+    compound = mid_table.get_compound_name()
+
+    # raise warning if current peak apex retention time is within half a window of previous ones
+    for time in peak_apex_time_list:
+        if (abs(ic.get_time_at_index(peak_apex_ix) - time)) > (win_size/2):
+             warning = 'Warning: '+compound+' '+str(file_name)+' '+str(mz)+' Peak apex rt shift > '+str(win_size/2)+'secs'
+             mid_table.append_warning(warning)
+             break
+
+    # raise warning if peak apex is smaller than left or right intensity
+    if ic.get_intensity_at_index(peak_apex_ix) < ic.get_intensity_at_index(peak_apex_ix-1):
+        warning = 'Warning: '+compound+' '+str(file_name)+' '+str(mz)+' An intensity > peak apex on the LEFT'
+        mid_table.append_warning(warning)
+    elif ic.get_intensity_at_index(peak_apex_ix) < ic.get_intensity_at_index(peak_apex_ix+1):
+        warning = 'Warning: '+compound+' '+str(file_name)+' '+str(mz)+' An intensity > peak apex on the RIGHT'
+        mid_table.append_warning(warning)
+    # raise warning if peak apex equals both neighbouring intensities 
+    elif (ic.get_intensity_at_index(peak_apex_ix) == ic.get_intensity_at_index(peak_apex_ix-1)) and (ic.get_intensity_at_index(peak_apex_ix) == ic.get_intensity_at_index(peak_apex_ix+1)):
+        warning = 'Warning: '+compound+' '+str(file_name)+' '+str(mz)+' Peak apex intensity EQUALS neighbouring left and right intensity'
+        mid_table.append_warning(warning)
+
+
+def check_peak_boundaries(ic_list, mid_table, sum_count, ave_left_ix, ave_right_ix, file_name, peak_apex_intensity_list, noise):
+
+    """
+    @summary: Perform peak boundary checks 
+
+    @param ic_list: Ion Chromatograms
+    @type ic_list: ListType
+    @param mid_table: pyms.MIDs.Class.MID_table
+    @type mid_table: pyms.MIDs.Class.MID_table
+    @param sum_count: Number of peaks detected above the noise
+    @param sum_count: IntType
+    @param ave_left_ix: Average left boundary index for the ions
+    @type ave_left_ix: IntType
+    @param ave_right_ix: Average right boundary index for the ions
+    @type ave_right_ix: IntType
+    @param peak_apex_intensity_list: List of peak apex intensities
+    @type peak_apex_intensity_list: ListType
+    @param noise: Noise treshold parameter
+    @type noise: IntType
+    
+    @return: None
+    @rtype: NoneType
+    
+    @author: Milica Ng
+    """
+
+    rt = mid_table.get_rt()
+    ion = mid_table.get_ion()
+
+    # raise warning if peak boundaries belonging to a single peak were used as average
+    if sum_count == 1:
+        warning = 'Warning: '+compound+' '+str(file_name)+' Only one ion peak was larger than '+str(noise)+'!'
+        mid_table.append_warning(warning)
+
+    # raise warning if rt is not between ave left and right boundary
+    if (rt < ave_left_ix) and (rt > ave_right_ix):
+        warning = 'Warning: '+compound+' '+str(file_name)+' Retention time is outside the integration interval'
+        mid_table.append_warning(warning)
+
+    # raise warning if an intensity larger than noise is found where peak apex is smaller than noise
+    j = 0
+    for peak_apex_intensity in peak_apex_intensity_list:
+         if peak_apex_intensity < noise:
+             for ix in range(ave_left_ix, ave_right_ix):
+                 if ic_list[j].get_intensity_at_index(ix) > noise:
+                     warning = 'Warning: '+compound+' '+str(file_name)+' '+str(ion+j)+' Peak apex detected  as lower than '+str(noise)+' however an intensity integrated was larger than '+str(noise)
+                     mid_table.append_warning(warning)
+                     break
+         j = j+1
+
 def plot_ics(ic_list, ave_left_ix, ave_right_ix, file_name, compound, noise):
 
     """
@@ -199,7 +297,7 @@ def plot_ics(ic_list, ave_left_ix, ave_right_ix, file_name, compound, noise):
         close()
 
 
-def extract_mid(mids, file_name, im, win_size, noise):
+def extract_mid(mid_table, file_name, im, win_size, noise):
 
     """
     @summary: Method for extracting mass isotopomer distribution (MID)
@@ -208,23 +306,26 @@ def extract_mid(mids, file_name, im, win_size, noise):
     @type file_name: StringType
     @param im: Intensity matrix
     @type im: pyms.GCMS.Class.IntensityMatrix
-    @param mids: Mass isotopomer distribution data
-    @type mids: pyms.Flux.Class.MIDS
+    @param mid_table: Mass isotopomer distribution table
+    @type mid_table: pyms.Flux.Class.MID_table
     @param mdv_size: Size of the mass distribution vector
     @type mdv_size: IntType
     @param win_size: Size of the window for local maximum search
     @type win_size: FloatType
     @param noise: Noise threshold below which signal is assumed unreliable
     @type win_size: IntType
+
+    @return: None
+    @rtype: NoneType
     
     @author: Milica Ng
     """
     
     # get compound name, rt, ion and mdv size
-    compound = mids.get_compound_name()
-    rt = mids.get_rt()
-    ion = mids.get_ion()
-    mdv_size = mids.get_mdv_size()
+    compound = mid_table.get_compound_name()
+    rt = mid_table.get_rt()
+    ion = mid_table.get_ion()
+    mdv_size = mid_table.get_mdv_size()
 
     # initialise loop variables
     left_boundary_sum = 0
@@ -263,23 +364,8 @@ def extract_mid(mids, file_name, im, win_size, noise):
 
         if peak_apex_int > noise: 
 
-            # raise warning if current peak apex retention time is within half a window of previous ones
-            for time in peak_apex_time_list:
-                if (abs(ic.get_time_at_index(peak_apex_ix) - time)) > (win_size/2):
-                     warning = 'Warning: '+compound+' '+str(file_name)+' '+str(mz)+' Peak apex rt shift > '+str(win_size/2)+'secs'
-                     mids.append_warning(warning)
-                     break
-            # raise warning if peak apex is smaller than left or right intensity
-            if ic.get_intensity_at_index(peak_apex_ix) < ic.get_intensity_at_index(peak_apex_ix-1):
-                warning = 'Warning: '+compound+' '+str(file_name)+' '+str(mz)+' An intensity > peak apex on the LEFT'
-                mids.append_warning(warning)
-            elif ic.get_intensity_at_index(peak_apex_ix) < ic.get_intensity_at_index(peak_apex_ix+1):
-                warning = 'Warning: '+compound+' '+str(file_name)+' '+str(mz)+' An intensity > peak apex on the RIGHT'
-                mids.append_warning(warning)
-            # raise warning if peak apex equals both neighbouring intensities 
-            elif (ic.get_intensity_at_index(peak_apex_ix) == ic.get_intensity_at_index(peak_apex_ix-1)) and (ic.get_intensity_at_index(peak_apex_ix) == ic.get_intensity_at_index(peak_apex_ix+1)):
-                warning = 'Warning: '+compound+' '+str(file_name)+' '+str(mz)+' Peak apex intensity EQUALS neighbouring left and right intensity'
-                mids.append_warning(warning)
+            # perform peak apex sanity checks
+            check_peak_apex(ic, mid_table, peak_apex_time_list, peak_apex_ix, mz, file_name, win_size)
 
             # sum left and right boundary indices above noise in the current file
             left_boundary_sum = left_boundary_sum + left_boundary_ix
@@ -292,42 +378,24 @@ def extract_mid(mids, file_name, im, win_size, noise):
 
     if sum_count > 0:
 
-
-        # raise warning if peak boundaries belonging to a single peak were used as average
-        if sum_count == 1:
-            warning = 'Warning: '+compound+' '+str(file_name)+' Only one ion peak was larger than '+str(noise)+'!'
-            mids.append_warning(warning)
-
         # find average of left and right boundary index in the current file
         ave_left_ix = left_boundary_sum/sum_count
         ave_right_ix = right_boundary_sum/sum_count
 
-        # raise warning if rt is not between ave left and right boundary
-        if (rt < ave_left_ix) and (rt > ave_right_ix):
-            warning = 'Warning: '+compound+' '+str(file_name)+' Retention time is outside the integration interval'
-            mids.append_warning(warning)
-
-        # raise warning if an intensity larger than noise is found where peak apex is smaller than noise
-        j = 0
-        for peak_apex_intensity in peak_apex_intensity_list:
-             if peak_apex_intensity < noise:
-                 for ix in range(ave_left_ix, ave_right_ix):
-                     if ic_list[j].get_intensity_at_index(ix) > noise:
-                         warning = 'Warning: '+compound+' '+str(file_name)+' '+str(ion+j)+' Peak apex detected  as lower than '+str(noise)+' however an intensity integrated was larger than '+str(noise)
-                         mids.append_warning(warning)
-                         break
-             j = j+1
+        # perform peak boundary checks
+        check_peak_boundaries(ic_list, mid_table, sum_count, ave_left_ix, ave_right_ix, file_name, peak_apex_intensity_list, noise)
 
         # plot for testing purposes only. to be deleted! 
         # plot_ics(ic_list, ave_left_ix, ave_right_ix, file_name, compound, noise)
 
-        # calculate mass isotopomer distribution in the current file
+        # calculate mdv in the current file
         mdv = calculate_mdv(ic_list, ave_left_ix, ave_right_ix)
             
     else:
-        mdv = [0] * mdv_size
+	# set mdv to zero
+        mdv = [0]*mdv_size
 
-    # store mass isotopomer distribution inside mids variable
-    mids.set_values(mdv, file_name)
+    # fill the empty MID table with mdv values
+    mid_table.set_values(mdv, file_name)
 
 

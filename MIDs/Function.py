@@ -23,20 +23,20 @@ Provides helper functions for MID processing
  #############################################################################
 
 from pyms.Utils.Error import error
-from pyms.MIDs.Class import MID
+from pyms.MIDs.Class import MID_table
 from pyms.Utils.IO import file_lines
 from pyms.Utils.Time import time_str_secs
 
 def parse_ion_defs(in_file):
 
     """
-    @summary: Read ion definitions and return as a list of MID objects
+    @summary: Read ion definitions and return as a list of MID_table objects
 
     @param in_file: The name of the file containing ion definitions
     @type in_file: StringType
 
-    @return: The list of MID objects with compound names, 
-        retention times, diagnostic ions and MID sizes set
+    @return: Empty MID_table object list with compound names, 
+        retention times, diagnostic ions and mdv sizes set
     @rtype: ListType
 
     @author: Milica Ng
@@ -44,7 +44,7 @@ def parse_ion_defs(in_file):
     """
 
     lines = file_lines(in_file, filter=True)
-    mids_list = []
+    mid_table_list = []
 
     for line in lines:
 
@@ -62,13 +62,13 @@ def parse_ion_defs(in_file):
         diagnostic_ion = int(items[2])
         mdv_size = int(items[3])
 
-        # set compound name, retention time, diagnostic ions and MID size
-        mids = MID(compound_name, rt, diagnostic_ion, mdv_size)
+        # set compound name, retention time, diagnostic ions and MDV size
+        mid_table = MID_table(compound_name, rt, diagnostic_ion, mdv_size)
 
-        # store mids in mids_list
-        mids_list.append(mids)
+        # store MID table in MID table list
+        mid_table_list.append(mid_table)
 
-    return mids_list
+    return mid_table_list
 
 def parse_data_defs(in_file):
 

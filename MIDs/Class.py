@@ -23,7 +23,7 @@ Class to model MID data
  #############################################################################
 
 
-class MID(object):
+class MID_table(object):
     
     """
     @summary: Object for storing MID values 
@@ -34,7 +34,7 @@ class MID(object):
     def __init__(self, compound_name, rt, ion, mdv_size):
         
         """
-        @summary: Initialise the MIDS data object
+        @summary: Initialise the MID table data object
 
         @param compound_name: Name of the compound
         @type compound_name: StringType
@@ -109,13 +109,13 @@ class MID(object):
 
         return self.__mdv_size
 
-    def set_values(self, mid, file_name):
+    def set_values(self, mdv, file_name):
 
         """
-        @summary: Set the MID values for an ion inside a particular file
+        @summary: Set the MID vector values inside a particular file
 
-        @param mid: Mass isotopomer distribution (MID) values
-        @type mid: ListType
+        @param mdv: Mass isotopomer distribution vector values
+        @type mdv: ListType
         @param ion: Diagnostic ion
         @type ion: IntType
         @param file_name: File number
@@ -124,7 +124,7 @@ class MID(object):
         @author: Milica Ng
         """
 
-        self.__values[file_name] = mid
+        self.__values[file_name] = mdv
 
     def append_warning(self, warning):
 
@@ -142,7 +142,7 @@ class MID(object):
     def write(self, out_file):
 
         """
-        @summary: Write MID data to a file
+        @summary: Write MID table data to a file
 
         @param out_file: Name of the output file
         @type out_file: StringType
@@ -180,7 +180,7 @@ class MID(object):
             fp.write(',')            
         fp.write('\n')
 
-        # write mid values
+        # write mdv values
         keys = self.__values.keys()
         keys.sort()
 
@@ -191,15 +191,15 @@ class MID(object):
             fp.write(',')
 
             # write mass isotopomer distribution
-            mid = self.__values[k]
-            mid_sum = float(sum(mid))
-            if mid_sum > 0:
-                for i in range(0, len(mid)):     
-                    fp.write(str(mid[i]/mid_sum))
+            mdv = self.__values[k]
+            mdv_sum = float(sum(mdv))
+            if mdv_sum > 0:
+                for i in range(0, len(mdv)):     
+                    fp.write(str(mdv[i]/mdv_sum))
                     fp.write(',')
                 fp.write('\n')
             else:
-                for i in range(0, len(mid)):     
+                for i in range(0, len(mdv)):     
                     fp.write(str(0.0))
                     fp.write(',')
                 fp.write('\n')
