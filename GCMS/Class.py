@@ -628,6 +628,47 @@ class IntensityMatrix(object):
         # Direct access for speed (DANGEROUS)
         self.intensity_matrix = self.__intensity_matrix
 
+        # Try to include parallelism.
+        try:
+            from mpi4py import MPI
+            comm = MPI.COMM_WORLD
+            num_ranks = comm.Get_size()
+            rank = comm.Get_rank()
+            M, N = len(intensity_matrix), len(intensity_matrix[0])
+            lrr = (rank*M/num_ranks, (rank + 1)*M/num_ranks - 1)
+            lcr = (rank*N/num_ranks, (rank + 1)*N/num_ranks - 1)
+            m, n = (lrr[1] - lrr[0], lcr[1] - lcr[0])
+            self.comm = comm
+            self.num_ranks = num_ranks
+            self.rank = rank
+            self.M = M
+            self.N = N
+            self.local_row_range = lrr
+            self.local_col_range = lcr
+            self.m = m
+            self.n = n
+
+        # If we can't import mpi4py then continue in serial.
+        except:
+            pass
+
+    def get_local_size(self):
+        """
+        @summary: Gets the local size of intensity matrix.
+
+        @return: Number of rows and cols
+        @rtype: IntType
+
+        @author: Luke Hodkinson
+        """
+
+        # Check for parallel.
+        if hasattr(self, 'comm'):
+            return self.m, self.n
+
+        # If serial call the regular routine.
+        return self.get_size()
+
     def get_size(self):
 
         """
@@ -645,6 +686,54 @@ class IntensityMatrix(object):
         n_mz = len(self.__intensity_matrix[0])
 
         return n_scan, n_mz
+
+    def iter_local_row_indices(self):
+        """
+        @summary: Iterate over local row indices.
+
+        @return: Current row index.
+        @rtype: IntType
+
+        @author: Luke Hodkinson
+        """
+
+        # Check for parallel.
+        if hasattr(self, 'comm'):
+            # At the moment we assume we break the matrix into contiguous
+            # ranges. We've allowed for this to change by wrapping up the
+            # iteration in this method.
+            for i in xrange(self.local_row_range[0], self.local_row_range[1]):
+                yield i
+
+        else:
+            # Iterate over global indices.
+            n_scan = len(self.__intensity_matrix)
+            for i in xrange(0, n_scan):
+                yield i
+
+    def iter_local_col_indices(self):
+        """
+        @summary: Iterate over local column indices.
+
+        @return: Current column index.
+        @rtype: IntType
+
+        @author: Luke Hodkinson
+        """
+
+        # Check for parallel.
+        if hasattr(self, 'comm'):
+            # At the moment we assume we break the matrix into contiguous
+            # ranges. We've allowed for this to change by wrapping up the
+            # iteration in this method.
+            for i in xrange(self.local_col_range[0], self.local_col_range[1]):
+                yield i
+
+        else:
+            # Iterate over global indices.
+            n_mz = len(self.__intensity_matrix[0])
+            for i in xrange(0, n_mz):
+                yield i
 
     def set_ic_at_index(self, ix, ic):
 
