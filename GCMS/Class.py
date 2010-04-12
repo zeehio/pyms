@@ -679,6 +679,7 @@ class IntensityMatrix(object):
 
         @author: Qiao Wang
         @author: Andrew Isaac
+        @author: Luke Hodkinson
         @author: Vladimir Likic
         """
 
@@ -687,11 +688,11 @@ class IntensityMatrix(object):
 
         return n_scan, n_mz
 
-    def iter_local_row_indices(self):
+    def iter_ms_indices(self):
         """
-        @summary: Iterate over local row indices.
+        @summary: Iterates over local row indices
 
-        @return: Current row index.
+        @return: Current row index
         @rtype: IntType
 
         @author: Luke Hodkinson
@@ -711,11 +712,11 @@ class IntensityMatrix(object):
             for i in xrange(0, n_scan):
                 yield i
 
-    def iter_local_col_indices(self):
+    def iter_ic_indices(self):
         """
-        @summary: Iterate over local column indices.
+        @summary: Iterate over local column indices
 
-        @return: Current column index.
+        @return: Current column index
         @rtype: IntType
 
         @author: Luke Hodkinson
