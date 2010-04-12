@@ -93,3 +93,21 @@ def parse_data_defs(in_file):
 
     return data_files
 
+def write_mid_tables(mid_table_list, out_file):
+
+    """
+    @summary: Write MID tables, including any warnings, to out_file
+
+    @param mid_table_list: List of MID tables 
+    @type mid_table_list: ListType
+    @param out_file: The name of the file used for writing
+    @type out_file: StringType
+
+    @return: None
+    @rtype: NoneType
+
+    @author: Milica Ng
+    """
+    for mid_table in mid_table_list:       
+        mid_table.write(out_file)
+

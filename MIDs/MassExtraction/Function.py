@@ -31,7 +31,7 @@ from pyms.Baseline.TopHat import tophat
 # for plotting only, delete later!
 from pylab import * # used by plotfile, savefig
 
-def peak_apex(ic, rt, win_size):
+def peak_apex(ic, rt, time_win):
 
     """
     @summary: Locate peak apex, as a local maximum 
@@ -40,8 +40,8 @@ def peak_apex(ic, rt, win_size):
     @type ic: pyms.GCMS.Class.IonChromatogram
     @param rt: Retention time
     @type rt: FloatType
-    @param win_size: Window for a local maximum search
-    @type win_size: FloatType
+    @param time_win: Window for a local maximum search
+    @type time_win: FloatType
     
     @return: Ion Chromatogram index 
     @rtype: IntType
@@ -50,9 +50,9 @@ def peak_apex(ic, rt, win_size):
     """
 
     # get indices at retention time +- 1/2 window size
-    lb_rt = rt - (win_size/2)
+    lb_rt = rt - (time_win/2)
     lb_ix = ic.get_index_at_time(lb_rt)
-    ub_rt = rt + (win_size/2)
+    ub_rt = rt + (time_win/2)
     ub_ix = ic.get_index_at_time(ub_rt)
 
     # find peak_apex (local maximum between lb & ub indices)
@@ -170,10 +170,10 @@ def calculate_mdv(ic_list, ave_left_ix, ave_right_ix):
 
     return mdv
 
-def check_peak_apex(ic, mid_table, peak_apex_time_list, peak_apex_ix, mz, file_name, win_size): 
+def check_peak_apex(ic, mid_table, peak_apex_time_list, peak_apex_ix, mz, file_name, time_win): 
 
     """
-    @summary: Perform peak sanity checks for detected peak apex
+    @summary: Perform checks for detected peak apex
 
     @param ic: Ion Chromatogram
     @type ic: pyms.GCMS.Class.IonChromatogram
@@ -187,8 +187,8 @@ def check_peak_apex(ic, mid_table, peak_apex_time_list, peak_apex_ix, mz, file_n
     @type mz: IntType
     @param file_name: The name of the current file
     @type file_name: StringType
-    @param win_size: Time retention window parameter
-    @type win_size: FloatType
+    @param time_win: Time retention window parameter
+    @type time_win: FloatType
     
     @return: None
     @rtype: NoneType
@@ -200,8 +200,8 @@ def check_peak_apex(ic, mid_table, peak_apex_time_list, peak_apex_ix, mz, file_n
 
     # raise warning if current peak apex retention time is within half a window of previous ones
     for time in peak_apex_time_list:
-        if (abs(ic.get_time_at_index(peak_apex_ix) - time)) > (win_size/2):
-             warning = 'Warning: '+compound+' '+str(file_name)+' '+str(mz)+' Peak apex rt shift > '+str(win_size/2)+'secs'
+        if (abs(ic.get_time_at_index(peak_apex_ix) - time)) > (time_win/2):
+             warning = 'Warning: '+compound+' '+str(file_name)+' '+str(mz)+' Peak apex rt shift > '+str(time_win/2)+'secs'
              mid_table.append_warning(warning)
              break
 
@@ -218,7 +218,7 @@ def check_peak_apex(ic, mid_table, peak_apex_time_list, peak_apex_ix, mz, file_n
         mid_table.append_warning(warning)
 
 
-def check_peak_boundaries(ic_list, mid_table, sum_count, ave_left_ix, ave_right_ix, file_name, peak_apex_intensity_list, noise):
+def check_peak_boundaries(ic_list, mid_table, sum_count, ave_left_ix, ave_right_ix, file_name, peak_apex_int_list, int_tresh):
 
     """
     @summary: Perform peak boundary checks 
@@ -227,16 +227,16 @@ def check_peak_boundaries(ic_list, mid_table, sum_count, ave_left_ix, ave_right_
     @type ic_list: ListType
     @param mid_table: pyms.MIDs.Class.MID_table
     @type mid_table: pyms.MIDs.Class.MID_table
-    @param sum_count: Number of peaks detected above the noise
+    @param sum_count: Number of peaks detected above the int_tresh
     @param sum_count: IntType
     @param ave_left_ix: Average left boundary index for the ions
     @type ave_left_ix: IntType
     @param ave_right_ix: Average right boundary index for the ions
     @type ave_right_ix: IntType
-    @param peak_apex_intensity_list: List of peak apex intensities
-    @type peak_apex_intensity_list: ListType
-    @param noise: Noise treshold parameter
-    @type noise: IntType
+    @param peak_apex_int_list: List of peak apex intensities
+    @type peak_apex_int_list: ListType
+    @param int_tresh: Intensity treshold parameter
+    @type int_tresh: IntType
     
     @return: None
     @rtype: NoneType
@@ -249,7 +249,7 @@ def check_peak_boundaries(ic_list, mid_table, sum_count, ave_left_ix, ave_right_
 
     # raise warning if peak boundaries belonging to a single peak were used as average
     if sum_count == 1:
-        warning = 'Warning: '+compound+' '+str(file_name)+' Only one ion peak was larger than '+str(noise)+'!'
+        warning = 'Warning: '+compound+' '+str(file_name)+' Only one ion peak was larger than '+str(int_tresh)+'!'
         mid_table.append_warning(warning)
 
     # raise warning if rt is not between ave left and right boundary
@@ -257,18 +257,18 @@ def check_peak_boundaries(ic_list, mid_table, sum_count, ave_left_ix, ave_right_
         warning = 'Warning: '+compound+' '+str(file_name)+' Retention time is outside the integration interval'
         mid_table.append_warning(warning)
 
-    # raise warning if an intensity larger than noise is found where peak apex is smaller than noise
+    # raise warning if an intensity larger than int_tresh is found where peak apex is smaller than int_tresh
     j = 0
-    for peak_apex_intensity in peak_apex_intensity_list:
-         if peak_apex_intensity < noise:
+    for peak_apex_intensity in peak_apex_int_list:
+         if peak_apex_intensity < int_tresh:
              for ix in range(ave_left_ix, ave_right_ix):
-                 if ic_list[j].get_intensity_at_index(ix) > noise:
-                     warning = 'Warning: '+compound+' '+str(file_name)+' '+str(ion+j)+' Peak apex detected  as lower than '+str(noise)+' however an intensity integrated was larger than '+str(noise)
+                 if ic_list[j].get_intensity_at_index(ix) > int_tresh:
+                     warning = 'Warning: '+compound+' '+str(file_name)+' '+str(ion+j)+' Peak apex detected  as lower than '+str(int_tresh)+' however an intensity integrated was larger than '+str(int_tresh)
                      mid_table.append_warning(warning)
                      break
          j = j+1
 
-def plot_ics(ic_list, ave_left_ix, ave_right_ix, file_name, compound, noise):
+def plot_ics(ic_list, ave_left_ix, ave_right_ix, file_name, compound, int_tresh):
 
     """
     @summary: For testing purposes only! To be deleted.
@@ -290,14 +290,14 @@ def plot_ics(ic_list, ave_left_ix, ave_right_ix, file_name, compound, noise):
         plot_file = "plots/"+compound+"-"+str(file_name)+"-"+str(count)+".png"
         count = count+1        
         plot(col1,col2) 
-        vlines(ic.get_time_at_index(ave_left_ix), 0, noise)
-        vlines(ic.get_time_at_index(ave_right_ix), 0, noise)
+        vlines(ic.get_time_at_index(ave_left_ix), 0, int_tresh)
+        vlines(ic.get_time_at_index(ave_right_ix), 0, int_tresh)
         title(plot_file)
         savefig(plot_file)
         close()
 
 
-def extract_mid(mid_table, file_name, im, win_size, noise):
+def extract_mid(mid_table, file_name, im, time_win, int_tresh):
 
     """
     @summary: Method for extracting mass isotopomer distribution (MID)
@@ -310,10 +310,10 @@ def extract_mid(mid_table, file_name, im, win_size, noise):
     @type mid_table: pyms.Flux.Class.MID_table
     @param mdv_size: Size of the mass distribution vector
     @type mdv_size: IntType
-    @param win_size: Size of the window for local maximum search
-    @type win_size: FloatType
-    @param noise: Noise threshold below which signal is assumed unreliable
-    @type win_size: IntType
+    @param time_win: Size of the window for local maximum search
+    @type time_win: FloatType
+    @param int_tresh: Intensity threshold below which signal is assumed unreliable
+    @type int_tresh: IntType
 
     @return: None
     @rtype: NoneType
@@ -333,7 +333,7 @@ def extract_mid(mid_table, file_name, im, win_size, noise):
     sum_count = 0
     ic_list = []
     peak_apex_time_list = []
-    peak_apex_intensity_list = []
+    peak_apex_int_list = []
 
     # loop over required number of mass isotopomers
     for mz in range(ion, ion+mdv_size):
@@ -351,30 +351,26 @@ def extract_mid(mid_table, file_name, im, win_size, noise):
         ic_list.append(ic)
 
         # get peak apex index and intensity
-        peak_apex_ix = peak_apex(ic, rt, win_size)
+        peak_apex_ix = peak_apex(ic, rt, time_win)
         peak_apex_int = ic.get_intensity_at_index(peak_apex_ix)
 
         # store peak apex retention time & intensity for later checks
         peak_apex_time_list.append(ic.get_time_at_index(peak_apex_ix))
-        peak_apex_intensity_list.append(ic.get_intensity_at_index(peak_apex_ix))
+        peak_apex_int_list.append(ic.get_intensity_at_index(peak_apex_ix))
 
         # get indices for left/right boundary
         left_boundary_ix = left_boundary(ic, peak_apex_ix, peak_apex_int)
         right_boundary_ix = right_boundary(ic, peak_apex_ix, peak_apex_int)
 
-        if peak_apex_int > noise: 
+        if peak_apex_int > int_tresh: 
 
             # perform peak apex sanity checks
-            check_peak_apex(ic, mid_table, peak_apex_time_list, peak_apex_ix, mz, file_name, win_size)
+            check_peak_apex(ic, mid_table, peak_apex_time_list, peak_apex_ix, mz, file_name, time_win)
 
-            # sum left and right boundary indices above noise in the current file
+            # sum left and right boundary indices above int_tresh in the current file
             left_boundary_sum = left_boundary_sum + left_boundary_ix
             right_boundary_sum = right_boundary_sum + right_boundary_ix
             sum_count = sum_count + 1
-
-            # collect left and right boundaries for standard deviation later
-            # left_boundary_ix_list.append(left_boundary_ix)
-            # right_boundary_ix_list.append(right_boundary_ix)
 
     if sum_count > 0:
 
@@ -383,10 +379,10 @@ def extract_mid(mid_table, file_name, im, win_size, noise):
         ave_right_ix = right_boundary_sum/sum_count
 
         # perform peak boundary checks
-        check_peak_boundaries(ic_list, mid_table, sum_count, ave_left_ix, ave_right_ix, file_name, peak_apex_intensity_list, noise)
+        check_peak_boundaries(ic_list, mid_table, sum_count, ave_left_ix, ave_right_ix, file_name, peak_apex_int_list, int_tresh)
 
         # plot for testing purposes only. to be deleted! 
-        # plot_ics(ic_list, ave_left_ix, ave_right_ix, file_name, compound, noise)
+        # plot_ics(ic_list, ave_left_ix, ave_right_ix, file_name, compound, int_tresh)
 
         # calculate mdv in the current file
         mdv = calculate_mdv(ic_list, ave_left_ix, ave_right_ix)
@@ -397,5 +393,3 @@ def extract_mid(mid_table, file_name, im, win_size, noise):
 
     # fill the empty MID table with mdv values
     mid_table.set_values(mdv, file_name)
-
-
