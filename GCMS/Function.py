@@ -137,6 +137,73 @@ def __fill_bins(data, min_mass, max_mass, bin_interval, bin_left, bin_right):
 
     @author: Qiao Wang
     @author: Andrew Isaac
+    @author: Moshe Olshansky
+    @author: Vladimir Likic
+    """
+
+    if not isinstance(data, GCMS_data):
+        error("data must be an GCMS_data object")
+    if not is_number(min_mass):
+        error("'min_mass' must be a number")
+    if not is_number(max_mass):
+        error("'max_mass' must be a number")
+    if not is_number(bin_interval):
+        error("'bin_interval' must be a number")
+    if not is_number(bin_left):
+        error("'bin_left' must be a number.")
+    if not is_number(bin_right):
+        error("'bin_right' must be a number.")
+    if not (abs(bin_left+bin_right-bin_interval) < 1.0e-6*bin_interval):
+        error("there should be no gaps or overlap.")
+
+    bin_left = abs(bin_left)
+    bin_right = abs(bin_right)
+
+    # To convert to int range, ensure bounds are < 1
+    bl = bin_left - int(bin_left)
+
+    # Number of bins
+    num_bins = int(float(max_mass+bl-min_mass)/bin_interval)+1
+
+    # initialise masses to bin centres
+    mass_list = [i * bin_interval + min_mass for i in xrange(num_bins)]
+
+    # fill the bins
+    intensity_matrix = []
+    for scan in data.get_scan_list():
+        intensity_list = [0.0] * num_bins
+        masses = scan.get_mass_list()
+        intensities = scan.get_intensity_list()
+        for ii in xrange(len(masses)):
+            mm = int((masses[ii] + bl - min_mass)/bin_interval)
+            intensity_list[mm] += intensities[ii]
+        intensity_matrix.append(intensity_list)
+
+    return IntensityMatrix(data.get_time_list(), mass_list, intensity_matrix)
+
+def __fill_bins_old(data, min_mass, max_mass, bin_interval, bin_left, bin_right):
+
+    """
+    @summary: Fills the intensity values for all bins
+
+    @param data: Raw GCMS data
+    @type data: pyms.GCMS.Class.GCMS_data
+    @param min_mass: minimum mass value
+    @type min_mass: IntType or FloatType
+    @param max_mass: maximum mass value
+    @type max_mass: IntType or FloatType
+    @param bin_interval: interval between bin centres
+    @type bin_interval: IntType or FloatType
+    @param bin_left: left bin boundary offset
+    @type bin_left: FloatType
+    @param bin_right: right bin boundary offset
+    @type bin_right: FloatType
+
+    @return: Binned IntensityMatrix object
+    @rtype: pyms.GCMS.Class.IntensityMatrix
+
+    @author: Qiao Wang
+    @author: Andrew Isaac
     @author: Vladimir Likic
     """
 
