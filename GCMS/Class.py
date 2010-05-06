@@ -1406,6 +1406,20 @@ class IonChromatogram(object):
         """
 
         return self.__ia.size
+    
+    def __sub__(self, Other):
+        """
+        @summary: Subtracts another IC from the current one
+        
+        @param other: Another IC
+        @type other: pyms.GCMS.IonChromatogram
+        """
+        
+        ia_for_sub = Other.get_intensity_array()
+        
+        for i in range(self.__ia.size):
+            self.__ia[i] = self.__ia[i] - ia_for_sub[i]
+            
 
     def get_intensity_at_index(self, ix):
 
@@ -1480,6 +1494,22 @@ class IonChromatogram(object):
         """
 
         return self.__time_list
+    
+    def get_mass(self):
+        
+        """
+        @summary: Returns the m/z channel of the IC
+        
+        @return: m/z channel of the IC
+        @rtype: intType
+        
+        @author: Sean O'Callaghan
+        """
+        if self.__mass == None:
+            error("TIC has no m/z label")
+        
+        return self.__mass
+        
 
     def get_time_step(self):
 

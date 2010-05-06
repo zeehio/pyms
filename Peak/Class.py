@@ -51,7 +51,7 @@ class Peak:
         @param ms: A ion mass, or spectra of maximising ions
         @type ms: FloatType, pyms.GCSM.Class.MassSpectrum
         @param minutes: Retention time units flag. If True, retention time
-            is in minutes; if Flase retention time is in seconds
+            is in minutes; if False retention time is in seconds
         @type minutes: BooleanType
         """
 
@@ -81,6 +81,7 @@ class Peak:
 
                 # TEST: to test if this speeds things up
                 self.mass_spec = ms.mass_spec
+                self.ms = ms
 
             else:
                 # single ion chromatogram properties
