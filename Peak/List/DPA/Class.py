@@ -26,7 +26,7 @@ import copy
 
 import numpy, Pycluster
 
-from pyms.Utils.Error import error
+from pyms.Utils.Error import error, stop
 from pyms.Experiment.Class import Experiment
 from pyms.GCMS.Class import MassSpectrum
 from pyms.Peak.Class import Peak
@@ -129,63 +129,96 @@ class Alignment(object):
 
         @author: Woon Wai Keen
         @author: Andrew Isaac
+        @author: Vladimir Likic
         """
 
         try:
-            fp_rt = open(rt_file_name, 'w')
-            fp_area = open(area_file_name, 'w')
+            fp1 = open(rt_file_name, "w")
+            fp2 = open(area_file_name, "w")
         except IOError:
             error("Cannot open output file for writing")
 
-        # write experiment headers
-        header = '"UID", "RTavg", "' + '", "'.join(self.expr_code) + '"\n'
+        # create header
+        header = '"UID","RTavg"'
+        for item in self.expr_code:
+            expr_code = ( '"%s"' % item )
+            header = header + "," + expr_code
+        header = header + "\n"
 
-        fp_rt.write(header)
-        fp_area.write(header)
+        # write headers
+        fp1.write(header)
+        fp2.write(header)
 
-        # for each alignment position write each alignment's peak and area
+        # for each alignment position write alignment's peak and area
         for peak_idx in range(len(self.peakpos[0])):
+
             rts = []
             areas = []
             new_peak_list = []
             avgrt = 0
             countrt = 0
+
             for align_idx in range(len(self.peakpos)):
+
                 peak = self.peakpos[align_idx][peak_idx]
+
                 if peak is not None:
+
                     if minutes:
-                        rtmin = peak.get_rt()/60.0
+                        rt = peak.get_rt()/60.0
                     else:
-                        rtmin = peak.get_rt()
-                    rts.append('%.3f' % rtmin)
-                    areas.append('%.4f' % peak.get_area())
+                        rt = peak.get_rt()
+
+                    rts.append(rt)
+                    areas.append(peak.get_area())
                     new_peak_list.append(peak)
-                    avgrt += rtmin
-                    countrt += 1
+
+                    avgrt = avgrt + rt
+                    countrt = countrt + 1
                 else:
-                    rts.append('NA')
-                    areas.append('NA')
+                    rts.append(None)
+                    areas.append(None)
 
             if countrt > 0:
                 avgrt = avgrt/countrt
-            new_peak = composite_peak(new_peak_list, minutes)
-            fp_rt.write(new_peak.get_UID() + (", %.3f, " % avgrt) +
-              ", ".join(rts) + "\n")
-            fp_area.write(new_peak.get_UID() + (", %.3f, " % avgrt) +
-              ", ".join(areas) + "\n")
 
-        fp_rt.close()
-        fp_area.close()
+            compo_peak = composite_peak(new_peak_list, minutes)
+            peak_UID = compo_peak.get_UID()
+            peak_UID_string = ( '"%s"' % peak_UID)
+
+            # write to retention times file
+            fp1.write(peak_UID_string)
+            fp1.write(",%.3f" % avgrt)
+            for rt in rts:
+                if rt == None:
+                    fp1.write(",NA")
+                else:
+                    fp1.write(",%.3f" % rt)
+            fp1.write("\n")
+
+            # write to peak areas file
+            fp2.write(peak_UID_string)
+            fp2.write(",%.3f" % avgrt)
+            for area in areas:
+                if area == None:
+                    fp2.write(",NA")
+                else:
+                    fp2.write(",%.4f" % area)
+            fp2.write("\n")
+
+        fp1.close()
+        fp2.close()
 
     def aligned_peaks(self, minutes=False):
 
         """
-        @summary: Returns a list of Peak objects where each peak has the
-            combined spectra and average retention time of all peaks that
-            aligned.
+        @summary: Returns a list of Peak objects where each peak
+            has the combined spectra and average retention time
+            of all peaks that aligned.
 
-        @param minutes: An optional indicator of whether retention times are
-            in minutes. If False, retention time are in seconds
+        @param minutes: An optional indicator of whether retention
+            times are in minutes. If False, retention time are in
+            seconds
         @type minutes: BooleanType
 
         @return: A list of composite peaks based on the alignment.
