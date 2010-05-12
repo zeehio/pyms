@@ -105,8 +105,6 @@ def ANDI_reader(file_name):
 
     return data
 
-
-import sys
 def ANDI_writer(file_name, im):
 
     """
@@ -235,10 +233,6 @@ def ANDI_writer(file_name, im):
   #-------------------- --- ----   --- -----
   #units                  0 CHAR    26 Arbitrary Intensity Units
 
-
-
-
-
     # netCDF dimension names
     __POINT_NUMBER = "point_number"
     __SCAN_NUMBER = "scan_number"
@@ -309,3 +303,4 @@ def ANDI_writer(file_name, im):
 
     # close file
     nc.close()
+
