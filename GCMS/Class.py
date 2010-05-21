@@ -236,6 +236,11 @@ class GCMS_data(object):
 
         return copy.deepcopy(self.__scan_list)
 
+    def __get_scan_list(self):
+        return self.__scan_list
+
+    scan_list = property(__get_scan_list)
+
     def get_tic(self):
 
         """
@@ -535,6 +540,11 @@ class Scan(object):
  
         return copy.deepcopy(self.__mass_list)
 
+    def __get_mass_list(self):
+        return self.__mass_list
+
+    mass_list = property(__get_mass_list)
+
 
     def get_intensity_list(self):
 
@@ -550,6 +560,11 @@ class Scan(object):
         """
        
         return copy.deepcopy(self.__intensity_list)
+
+    def __get_intensity_list(self):
+        return self.__intensity_list
+
+    intensity_list = property(__get_intensity_list)
   
 
     def get_min_mass(self):
@@ -635,8 +650,8 @@ class IntensityMatrix(object):
             num_ranks = comm.Get_size()
             rank = comm.Get_rank()
             M, N = len(intensity_matrix), len(intensity_matrix[0])
-            lrr = (rank*M/num_ranks, (rank + 1)*M/num_ranks - 1)
-            lcr = (rank*N/num_ranks, (rank + 1)*N/num_ranks - 1)
+            lrr = (rank*M/num_ranks, (rank + 1)*M/num_ranks)
+            lcr = (rank*N/num_ranks, (rank + 1)*N/num_ranks)
             m, n = (lrr[1] - lrr[0], lcr[1] - lcr[0])
             self.comm = comm
             self.num_ranks = num_ranks

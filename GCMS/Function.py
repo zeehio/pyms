@@ -168,12 +168,18 @@ def __fill_bins(data, min_mass, max_mass, bin_interval, bin_left, bin_right):
     # initialise masses to bin centres
     mass_list = [i * bin_interval + min_mass for i in xrange(num_bins)]
 
+    # Modified binning loops. I've replaced the deepcopy getting routines with
+    # the alias properties. This way we can avoid performing the copies when
+    # it is clear that we do not intend on modifying the contents of the arrays
+    # here.
+    #           - Luke Hodkinson, 18/05/2010
+
     # fill the bins
     intensity_matrix = []
-    for scan in data.get_scan_list():
+    for scan in data.scan_list: # use the alias, not the copy (Luke)
         intensity_list = [0.0] * num_bins
-        masses = scan.get_mass_list()
-        intensities = scan.get_intensity_list()
+        masses = scan.mass_list # use the alias, not the copy (Luke)
+        intensities = scan.intensity_list # use the alias, not the copy (Luke)
         for ii in xrange(len(masses)):
             mm = int((masses[ii] + bl - min_mass)/bin_interval)
             intensity_list[mm] += intensities[ii]
