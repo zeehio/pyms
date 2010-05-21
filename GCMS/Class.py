@@ -1354,8 +1354,6 @@ class IntensityMatrix(object):
         # Direct access for speed (DANGEROUS)
         self.intensity_matrix = self.__intensity_matrix
 
-
-
 ## get_ms_at_time()
 
 class IonChromatogram(object):
