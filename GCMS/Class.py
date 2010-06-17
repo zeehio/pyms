@@ -188,7 +188,7 @@ class GCMS_data(object):
         if not is_number(time):
             error("'time' must be a number")
 
-        if time < self.__min_rt or time > self.__max_rt:
+        if (time < self.__min_rt) or (time > self.__max_rt):
             error("time %.2f is out of bounds (min: %.2f, max: %.2f)" %
                   (time, self.__min_rt, self.__max_rt))
 
