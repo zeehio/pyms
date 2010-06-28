@@ -46,6 +46,8 @@ class MID_table(object):
         @type mdv_size: IntType
         @param warnings: Warnings list
         @type warnings: ListType
+        @param atoms: Dictionary of elemental composition
+        @type atoms: DictType
 
         @author: Milica Ng
         """
@@ -56,6 +58,25 @@ class MID_table(object):
         self.__mdv_size = mdv_size
         self.__values = {}
         self.__warnings = []
+        self.__atoms = {}
+
+    def is_empty(self):
+
+        """
+        @summary: Check if MID table is empty
+
+        @return: True or False
+        @rtype: BooleanType
+
+        @author: Milica Ng
+        """
+
+        if self.__values == {}:
+            empty = True
+        else:
+            empty = False
+
+        return empty
 
     def get_compound_name(self):
 
@@ -69,6 +90,7 @@ class MID_table(object):
         """
 
         return self.__compound_name
+
 
     def get_rt(self):
 
@@ -109,6 +131,49 @@ class MID_table(object):
 
         return self.__mdv_size
 
+    def get_values(self):
+
+        """
+        @summary: Return MID table values
+
+        @return: values
+        @rtype: DictType
+
+        @author: Milica Ng
+        """
+
+        return self.__values
+
+    def get_atoms(self):
+
+        """
+        @summary: Return ion atom composition
+
+        @return: atoms
+        @rtype: DictType
+
+        @author: Milica Ng
+        """
+
+        return self.__atoms
+
+
+    def set_atoms(self, element, num):
+
+        """
+        @summary: Set the number of atoms for a particular element
+
+        @param element: Element (C, O, N, H, Si or S)
+        @type element: StringType
+        @param num: Number of particular atoms in the fragment
+        @type num: IntType
+
+        @author: Milica Ng
+        """
+
+        self.__atoms[element] = num
+
+
     def set_values(self, mdv, file_name):
 
         """
@@ -116,8 +181,6 @@ class MID_table(object):
 
         @param mdv: Mass isotopomer distribution vector values
         @type mdv: ListType
-        @param ion: Diagnostic ion
-        @type ion: IntType
         @param file_name: File number
         @type file_name: StringType
 
@@ -153,27 +216,27 @@ class MID_table(object):
         # write a header (compound name and retention time)
         fp = open(out_file, 'a')
         fp.write('\n')
+        fp.write('compound,')
         fp.write(self.__compound_name)
         fp.write('\n')
-        fp.write('rt = ')
+        fp.write('rt =,')
         fp.write(str(self.__rt))
-        fp.write('secs')
+        fp.write(',secs')
         fp.write('\n')
-        fp.write('rt = ')
+        fp.write('#rt =,')
         fp.write(str(self.__rt/float(60)))
-        fp.write('mins')
+        fp.write(',mins')
         fp.write('\n')
-        fp.write('ion ')
+        fp.write('ion,')
         fp.write(str(self.__ion))
         fp.write('\n')
-        fp.write('mdv size = ')
+        fp.write('mdv size =,')
         fp.write(str(self.__mdv_size))
 
         fp.write('\n')
 
         # write column names
-        fp.write('file name')
-        fp.write(',')
+        fp.write('#,,')
         for m in range(0,self.__mdv_size):
             fp.write('M+')
             fp.write(str(m))
@@ -186,7 +249,8 @@ class MID_table(object):
 
         for k in keys:
 
-            # write file number
+            # write file name
+            fp.write('file name,')
             fp.write(str(k))
             fp.write(',')
 

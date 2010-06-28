@@ -180,8 +180,9 @@ def file_lines(file_name, filter=False):
         # discard comments
         lines_to_discard = []
         for line in lines_filtered:
-            if line[0] == "#":
-                lines_to_discard.append(line)
+            if len(line) != 0:
+                if line[0] == "#":
+                    lines_to_discard.append(line)
         for line in lines_to_discard:
             lines_filtered.remove(line)
         lines = lines_filtered

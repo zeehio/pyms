@@ -1,5 +1,5 @@
 """
-Functions for Flux.MassCorrect
+Functions for MIDs.MassCorrect
 """
 
  #############################################################################
@@ -28,6 +28,52 @@ from pyms.Utils.Error import error
 from pyms.Utils.Utils import is_int, is_positive_int, is_list, \
     is_list_of_dec_nums, is_array, is_number
 from Constants import nsi
+
+
+def correct_mdv(mdv, atoms, f_unlabelled):
+
+    """
+    @summary: Correct MID for natural isotopic abundance
+
+    @param mdv: Mass isotopomer distribution vector
+    @type mdv: types.ListType
+    @param atoms: Fragment's elemental composition
+    @type atoms: types.DictType
+    @param f_unlabelled: Fractional labelling.
+    @type f_unlabelled: types.FloatType
+    
+    @author: Milica Ng
+    """
+    # calculate n, this can work depending on the content of the  input file
+    n = len(mdv)-1
+
+    # the overall correction matrix
+    c_corr = overall_correction_matrix(n, mdv, atoms)
+    #print('\n Overall correction matrix:')
+    #print(c_corr)
+
+    # the exclusive mass isotope distribution of the carbon skeleton, mdv_alpha_star
+    mdv_alpha_star = c_mass_isotope_distr(mdv, c_corr)
+    #print('\n Normalised mdv alpha star:')
+    #print(mdv_alpha_star)
+
+    # correction for unlabelled biomass
+    mdv_aa = corr_unlabelled(n, mdv_alpha_star, f_unlabelled)
+    #print('\n mdv_aa:')
+    #print(mdv_aa)
+
+    # For [U-13C]glucose experiments, the fractional labelling (FL) of the different
+    # fragments should be equal to the labelling content of the input substrate 
+    # (i.e. when 20% [U-13C]glucose is used, the FL should be 0.2 for all fragments).
+    fl = fract_labelling(n, mdv_aa)
+    #print('\n Fractional labelling FL: %s' % ( fl ))
+
+    # convert to a list of lists 
+    mdv_aa = mdv_aa.tolist()
+    # reduce to a list
+    mdv_aa = reduce(list.__add__, mdv_aa)
+
+    return mdv_aa
 
 def fract_labelling(n, mdv_aa):
 
@@ -85,6 +131,7 @@ def corr_unlabelled(n, mdv_alpha_star, f_unlabelled):
 
     mdv_unlabelled = mass_dist_vector(n, n, nsi['c'])
     mdv_aa = (mdv_alpha_star - f_unlabelled * mdv_unlabelled)/(1 - f_unlabelled)
+
     return mdv_aa
 
 def overall_correction_matrix(n, mdv, atoms):
@@ -119,10 +166,10 @@ def overall_correction_matrix(n, mdv, atoms):
     atom_symbols = atoms.keys()
     c_corr = numpy.eye(n+1) 
     for a in atom_symbols:
-        print '\n Calculating %s correction matrix' % ( a )
+        # print '\n Calculating %s correction matrix' % ( a )
         m_corr = correction_matrix(n, atoms[a], nsi[a])
         c_corr = numpy.dot(c_corr,m_corr)
-    print '\n Calculated overall correction matrix.'
+    # print '\n Calculated overall correction matrix.'
     return c_corr
 
 def correction_matrix(n, num_a, nsil):
