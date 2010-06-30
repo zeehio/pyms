@@ -5,7 +5,7 @@ Class to Display Ion Chromatograms and TIC
 #############################################################################
 #                                                                           #
 #    PyMS software for processing of metabolomic mass-spectrometry data     #
-#    Copyright (C) 2005-2010 Vladimir Likic                                    #
+#    Copyright (C) 2005-2010 Vladimir Likic                                 #
 #                                                                           #
 #    This program is free software; you can redistribute it and/or modify   #
 #    it under the terms of the GNU General Public License version 2 as      #
@@ -22,10 +22,6 @@ Class to Display Ion Chromatograms and TIC
 #                                                                           #
 #############################################################################
 
-
-
-
-
 import matplotlib.pyplot as plt
 import numpy
 import sys
@@ -33,7 +29,6 @@ sys.path.append('/x/PyMS/')
 
 from pyms.GCMS.Class import IonChromatogram 
 from pyms.Utils.Error import error
-
 
 
 class Display(object):
