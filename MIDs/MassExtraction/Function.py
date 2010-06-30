@@ -382,7 +382,7 @@ def extract_mid(mid_table, file_name, im, time_win, int_tresh):
         check_peak_boundaries(ic_list, mid_table, sum_count, ave_left_ix, ave_right_ix, file_name, peak_apex_int_list, int_tresh)
 
         # plot for testing purposes only. to be deleted! 
-        plot_ics(ic_list, ave_left_ix, ave_right_ix, file_name, compound, int_tresh)
+        # plot_ics(ic_list, ave_left_ix, ave_right_ix, file_name, compound, int_tresh)
 
         # calculate mdv in the current file
         mdv = calculate_mdv(ic_list, ave_left_ix, ave_right_ix)
