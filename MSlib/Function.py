@@ -4,12 +4,8 @@ sys.path.append('/x/PyMS/')
 
 import string
 
-from pyms.MSlib.Class import msrecord
-from pyms.MSlib.Class import mslib
-from pyms.Utils.IO import file_lines
-from pyms.Utils.IO import dump_object
-from pyms.Utils.IO import load_object
-
+from pyms.MSlib.Class import msrecord, mslib
+from pyms.Utils.IO import file_lines, dump_object, load_object
 
 def load_nist(file_name):    
 
@@ -19,22 +15,23 @@ def load_nist(file_name):
     __RECORD_START_KEYWORD = "##TITLE"
 
     nist_lines = file_lines(file_name)
-    
+
     collect_ms_flag = False
     cmpd_counter = 0
     ms_lib = mslib()
 
-    for line in nist_lines:        
+    for line in nist_lines:
+
         fields = string.split(line, "=")
 
         if len(fields)>0 and fields[0].upper() == __RECORD_START_KEYWORD:
             collect_ms_flag = False
-            
+
         elif len(fields)>0 and fields[0].upper() == __CMPD_NAME_KEYWORD:
             ms_record = msrecord()
-            cmpd_counter = cmpd_counter+1            
+            cmpd_counter = cmpd_counter+1
 
-            if(cmpd_counter>1):
+            if cmpd_counter>1:
                 ms_record.set(cmpd_name, cmpd_regno, mi_dict)
                 ms_lib.addrecord(ms_record)
 
@@ -53,7 +50,7 @@ def load_nist(file_name):
             mi_dict = {}
 
         elif collect_ms_flag:
-            if(fields[0][0]!='#'):
+            if fields[0][0]!='#':
                 mi = string.split(line)
                 mass = int(mi[0])
                 intensity = int(mi[1])
@@ -61,14 +58,12 @@ def load_nist(file_name):
 
     ms_record.set(cmpd_name, cmpd_regno, mi_dict)
     ms_lib.addrecord(ms_record)
-       
-    return ms_lib
 
+    return ms_lib
 
 def write_ms_lib(ms_lib, filename):
     dump_object(ms_lib, filename)
-                
-                
+
 def load_ms_lib(filename):
     print "Loading ms library object..."
     lib = load_object(filename)
@@ -79,5 +74,4 @@ def read_ms_lib(ms_lib):
     for x in ms_lib.msrecord_list:
         counter = counter + 1
         print counter, x.name    
-    
-    
+
