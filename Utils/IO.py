@@ -169,8 +169,7 @@ def file_lines(file_name, filter=False):
     close_for_reading(fp)
 
     if filter:
-        # remove the newline character, strip leading and
-        # talining whitespaces
+        # strip leading and talining whitespaces
         lines_filtered = []
         for line in lines:
             line = line.strip()
@@ -179,9 +178,9 @@ def file_lines(file_name, filter=False):
         # discard comments
         lines_to_discard = []
         for line in lines_filtered:
-            if len(line) != 0:
-                if line[0] == "#":
-                    lines_to_discard.append(line)
+            # remove empty lines and comments
+            if len(line) == 0 or line[0] == "#":
+                lines_to_discard.append(line)
         for line in lines_to_discard:
             lines_filtered.remove(line)
         lines = lines_filtered
