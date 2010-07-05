@@ -44,10 +44,6 @@ class MID_table(object):
         @type ion: IntType
         @param mdv_size: total number of masses (n+1 for M, M+1, ..., M+n)
         @type mdv_size: IntType
-        @param warnings: Warnings list
-        @type warnings: ListType
-        @param atoms: Dictionary of elemental composition
-        @type atoms: DictType
 
         @author: Milica Ng
         """
@@ -59,6 +55,7 @@ class MID_table(object):
         self.__values = {}
         self.__warnings = []
         self.__atoms = {}
+        self.__fl = {}
 
     def is_empty(self):
 
@@ -189,6 +186,21 @@ class MID_table(object):
 
         self.__values[file_name] = mdv
 
+    def set_fl(self, fl, file_name):
+
+        """
+        @summary: Set the MID vector values inside a particular file
+
+        @param fl: Fractionla labelling of the ion
+        @type mdv: FloatType
+        @param file_name: File number
+        @type file_name: StringType
+
+        @author: Milica Ng
+        """
+
+        self.__fl[file_name] = fl
+
     def append_warning(self, warning):
 
         """
@@ -240,7 +252,8 @@ class MID_table(object):
         for m in range(0,self.__mdv_size):
             fp.write('M+')
             fp.write(str(m))
-            fp.write(',')            
+            fp.write(',') 
+        fp.write('FL')           
         fp.write('\n')
 
         # write mdv values
@@ -256,11 +269,13 @@ class MID_table(object):
 
             # write mass isotopomer distribution
             mdv = self.__values[k]
+            fl = self.__fl[k]
             mdv_sum = float(sum(mdv))
             if mdv_sum > 0:
                 for i in range(0, len(mdv)):     
                     fp.write(str(mdv[i]/mdv_sum))
                     fp.write(',')
+                fp.write(str(fl))
                 fp.write('\n')
             else:
                 for i in range(0, len(mdv)):     

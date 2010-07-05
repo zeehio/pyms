@@ -73,7 +73,7 @@ def correct_mdv(mdv, atoms, f_unlabelled):
     # reduce to a list
     mdv_aa = reduce(list.__add__, mdv_aa)
 
-    return mdv_aa
+    return (mdv_aa, fl)
 
 def fract_labelling(n, mdv_aa):
 
