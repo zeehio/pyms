@@ -39,7 +39,7 @@ def tophat(ic, struct=None):
     @summary: Top-hat baseline correction on Ion Chromatogram
 
     @param ic: The input ion chromatogram
-    @type ic: pyms.IO.Class.IonChromatogram
+    @type ic: pyms.GCMS.Class.IonChromatogram
     @param struct: Top-hat structural element as time string
     @type struct: StringType
 
@@ -70,15 +70,15 @@ def tophat(ic, struct=None):
 
     return ic_bc
 
-def tophat_mat(im, struct=None):
+def tophat_im(im, struct=None):
     
     """
     @summary: Top-hat baseline correction on Intensity Matrix
 
               Wraps around the TopHat function above
 
-    @param ic: The input Intensity Matrix
-    @type ic: pyms.IO.Class.IntenstiyMatrix
+    @param im: The input Intensity Matrix
+    @type im: pyms.GCMS.Class.IntenstiyMatrix
     @param struct: Top-hat structural element as time string
     @type struct: StringType
 

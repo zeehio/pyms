@@ -69,14 +69,14 @@ def window_smooth(ic, window=__DEFAULT_WINDOW, median=False):
 
     return ic_denoise
 
-def window_smooth_mat(im, window=__DEFAULT_WINDOW, median=False):
+def window_smooth_im(im, window=__DEFAULT_WINDOW, median=False):
     """
     @summary: Applies window smoothing on Intensity Matrix
 
               Simply wraps around the window smooth function above
 
-    @param ic: The input Intensity Matrix
-    @type ic: pyms.GCMS.Class.IntensityMatrix
+    @param im: The input Intensity Matrix
+    @type im: pyms.GCMS.Class.IntensityMatrix
     @param window: The window selection parameter. 
     @type window: IntType or StringType
     

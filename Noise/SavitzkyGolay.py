@@ -77,7 +77,7 @@ def savitzky_golay(ic, window=__DEFAULT_WINDOW, \
 
     return ic_denoise
 
-def savitzky_golay_mat(im, window=__DEFAULT_WINDOW, \
+def savitzky_golay_im(im, window=__DEFAULT_WINDOW, \
         degree=__DEFAULT_POLYNOMIAL_DEGREE):
     """
     @summary: Applies Savitzky-Golay filter on Intensity
@@ -87,7 +87,7 @@ def savitzky_golay_mat(im, window=__DEFAULT_WINDOW, \
               function above
 
     @param im: The input IntensityMatrix
-    @type ic: pyms.GCMS.Class.IntensityMatrix
+    @type im: pyms.GCMS.Class.IntensityMatrix
     @param window: The window selection parameter. 
     @type window: IntType or StringType
     
