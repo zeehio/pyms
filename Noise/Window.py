@@ -69,6 +69,39 @@ def window_smooth(ic, window=__DEFAULT_WINDOW, median=False):
 
     return ic_denoise
 
+def window_smooth_mat(im, window=__DEFAULT_WINDOW, median=False):
+    """
+    @summary: Applies window smoothing on Intensity Matrix
+
+              Simply wraps around the window smooth function above
+
+    @param ic: The input Intensity Matrix
+    @type ic: pyms.GCMS.Class.IntensityMatrix
+    @param window: The window selection parameter. 
+    @type window: IntType or StringType
+    
+    @param median: An indicator whether the mean or median window smoothing
+        to be used
+    @type median: Booleantype
+
+    @return: Smoothed Intensity Matrix
+    @rtype: pyms.GCMS.Class.IntensityMatrix
+
+    @author: Sean O'Callaghan
+    @author: Vladimir Likic
+    """
+    
+    n_scan, n_mz = im.get_size()
+    
+    im_smooth = copy.deepcopy(im)
+    
+    for ii in range(n_mz):
+        ic = im_smooth.get_ic_at_index(ii)
+        ic_smooth = window_smooth(ic, window, median)
+        im_smooth.set_ic_at_index(ii, ic_smooth)
+        
+    return im_smooth
+
 def __mean_window(ia, wing_length):
 
     """

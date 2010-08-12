@@ -77,6 +77,42 @@ def savitzky_golay(ic, window=__DEFAULT_WINDOW, \
 
     return ic_denoise
 
+def savitzky_golay_mat(im, window=__DEFAULT_WINDOW, \
+        degree=__DEFAULT_POLYNOMIAL_DEGREE):
+    """
+    @summary: Applies Savitzky-Golay filter on Intensity
+              Matrix
+              
+              Simply wraps around the Savitzky Golay 
+              function above
+
+    @param im: The input IntensityMatrix
+    @type ic: pyms.GCMS.Class.IntensityMatrix
+    @param window: The window selection parameter. 
+    @type window: IntType or StringType
+    
+    @param degree: degree of the fitting polynomial for the Savitzky-Golay
+        filter
+    @type degree: IntType
+
+    @return: Smoothed IntensityMatrix
+    @rtype: pyms.GCMS.Class.IntensityMatrix
+
+    @author: Sean O'Callaghan
+    @author: Vladimir Likic
+    """
+    
+    n_scan, n_mz = im.get_size()
+    
+    im_smooth = copy.deepcopy(im)
+    
+    for ii in range(n_mz):
+        ic = im_smooth.get_ic_at_index(ii)
+        ic_smooth = savitzky_golay(ic, window, degree)
+        im_smooth.set_ic_at_index(ii, ic_smooth)
+        
+    return im_smooth
+
 def __calc_coeff(num_points, pol_degree, diff_order=0):
 
     """
