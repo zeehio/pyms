@@ -450,10 +450,10 @@ class GCMS_data(object):
         @param file_name: Output file name
         @type file_name: StringType
 
-        This function loop over all scans, and for each
-        scan writes intensities to the file, one intenisity
-        per line. Intensities from different scans are
-        joined without any delimiters.
+        This function loop over all scans, and for each scan
+        writes intensities to the file, one intenisity per
+        line. Intensities from different scans are joined
+        without any delimiters.
 
         @author: Vladimir Likic
         """

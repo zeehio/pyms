@@ -73,8 +73,8 @@ def build_intensity_matrix(data, bin_interval=1, bin_left=0.5, bin_right=0.5):
 
     min_mass = data.get_min_mass()
     max_mass = data.get_max_mass()
-    return __fill_bins(data, min_mass, max_mass, bin_interval, bin_left, \
-        bin_right)
+
+    return __fill_bins(data, min_mass, max_mass, bin_interval, bin_left, bin_right)
 
 def build_intensity_matrix_i(data, bin_left=0.3, bin_right=0.7):
 
@@ -108,7 +108,7 @@ def build_intensity_matrix_i(data, bin_left=0.3, bin_right=0.7):
     min_mass = data.get_min_mass()
     max_mass = data.get_max_mass()
 
-    # Calc integer min mass based on right boundary
+    # Calculate integer min mass based on right boundary
     bin_right = abs(bin_right)
     min_mass = int(min_mass+1-bin_right)
 
@@ -408,3 +408,4 @@ def ic_window_points(ic, window_sele, half_window=False):
         if points < 2: error("window too small (window=%d)" % (points))
 
     return points
+
