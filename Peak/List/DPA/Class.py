@@ -68,9 +68,9 @@ class Alignment(object):
         else:
             if not isinstance(expr, Experiment):
                 error("'expr' must be an Experiment object")
-            for peak in expr.get_peak_list():
-                if peak.get_area() == None or peak.get_area() <= 0:
-                    error("All peaks must have an area for alignment")
+            #for peak in expr.get_peak_list():
+            #    if peak.get_area() == None or peak.get_area() <= 0:
+            #        error("All peaks must have an area for alignment")
             self.peakpos = [ copy.deepcopy(expr.get_peak_list()) ]
             self.peakalgt = numpy.transpose(self.peakpos)
             self.expr_code =  [ expr.get_expr_code() ]
@@ -208,6 +208,223 @@ class Alignment(object):
 
         fp1.close()
         fp2.close()
+
+
+    def write_common_ion_csv(self, area_file_name, top_ion_list, minutes=True):
+
+        """
+        @summary: Writes the alignment to CSV files
+
+        This function writes two files: one containing the alignment of peak
+        retention times and the other containing the alignment of peak areas.
+
+        @param area_file_name: The name for the areas alignment file
+        @type area_file_name: StringType
+        @param top_ion_list: A list of the highest intensity common ion
+                             along the aligned peaks
+        @type top_ion_list: ListType
+        @param minutes: An optional indicator whether to save retention times
+            in minutes. If False, retention time will be saved in seconds
+        @type minutes: BooleanType
+
+        @author: Woon Wai Keen
+        @author: Andrew Isaac
+        @author: Sean O'Callaghan
+        @author: Vladimir Likic
+        """
+
+        try:
+            fp = open(area_file_name, "w")
+        except IOError:
+            error("Cannot open output file for writing")
+
+        if top_ion_list == None:
+            error("List of common ions must be supplied")
+
+        # create header
+        header = '"UID","RTavg", "Quant Ion"'
+        for item in self.expr_code:
+            expr_code = ( '"%s"' % item )
+            header = header + "," + expr_code
+        header = header + "\n"
+
+        # write headers
+
+        fp.write(header)
+
+        rtsums = []
+        rtcounts = []
+
+        # The following two arrays will become list of lists
+        # such that:
+        # areas = [  [align1_peak1, align2_peak1, .....,alignn_peak1]
+        #            [align1_peak2, ................................]
+        #              .............................................
+        #            [align1_peakm,....................,alignn_peakm]  ]
+        areas = []
+        new_peak_lists = []
+
+        for peak_list in self.peakpos:
+            index = 0
+            for peak in peak_list:
+                # one the first iteration, populate the lists
+                if len(areas) < len(peak_list):
+                    areas.append([])
+                    new_peak_lists.append([])
+                    rtsums.append(0)
+                    rtcounts.append(0)
+
+                
+                if peak is not None:
+                    rt = peak.get_rt()
+
+                    # get the area of the common ion for the peak
+                    # an area of 'na' shows that while the peak was
+                    # aligned, the common ion was not present
+                    area = peak.get_ion_area(top_ion_list[index])
+                     
+                    areas[index].append(area)
+                    new_peak_lists[index].append(peak)
+
+
+                    # The following code to the else statement is
+                    # just for calculating the average rt
+                    rtsums[index] += rt
+                    rtcounts[index] += 1
+                    
+                else:
+                    areas[index].append(None)
+
+                index += 1
+
+
+        out_strings = []
+        index = 0
+        # now write the strings for the file
+        for area_list in areas:
+ 
+            # write initial info:
+            # peak unique id, peak average rt
+            compo_peak = composite_peak(new_peak_lists[index], minutes)
+            peak_UID = compo_peak.get_UID()
+            peak_UID_string = ( '"%s"' % peak_UID)
+
+            rt_avg = rtsums[index]/rtcounts[index]
+                    
+            out_strings.append(peak_UID_string + (",%.3f" % (rt_avg/60))+\
+                                   (",%d" % top_ion_list[index]))
+
+            for area in area_list:
+                if area is not None:
+                    out_strings[index] += (",%.4f" % area)
+                else:
+                    out_strings[index] += (",NA")
+            
+            index += 1
+
+
+        # now write the file
+#        print "length of areas[0]", len(areas[0])
+#        print "lenght of areas", len(areas)
+#        print "length of out_strings", len(out_strings)
+        for row in out_strings:
+            fp.write(row +"\n")
+                
+        fp.close()
+
+
+    def common_ion(self):
+        """
+        @summary: Calculates a common ion among the
+                  peaks of an aligned peak
+
+        @return: A list of the highest intensity common ion for all aligned 
+                 peaks
+        @rtype: ListType
+
+        @author: Sean O'Callaghan
+
+        """
+
+       # print "#peak lists =", len(self.peakpos)
+       # print "#peaks =", len(self.peakpos[0])
+        
+        # a list to contain the dictionaries
+        # each dictionary contains the
+        # top ions and their frequency for each peak
+        # in the alignment
+        list_of_top_ion_dicts = []
+        empty_count_list = []
+        
+        for peak_list in self.peakpos:
+            # (re)initialise the peak index
+            index = 0
+            
+            for peak in peak_list:
+                # if the dict has not been created, create it
+                # will only run on first peak list
+                if len(list_of_top_ion_dicts) < len(peak_list):
+                    list_of_top_ion_dicts.append({})
+                    
+                    
+                # copy the list entry to a local dict for code clarity
+                top_ion_dict = list_of_top_ion_dicts[index]
+
+                # count the empty peaks
+                if (len(empty_count_list)) < len(peak_list):
+                    empty_count = 0
+                else:
+                    empty_count = empty_count_list[index] 
+                #make sure the peak is present
+                if peak is not None:
+                    # get the top 5 ions
+                    top_5 = peak.get_ion_areas().keys()
+                
+                    for ion in top_5:
+                        # if we haven't seen it before, add it
+                        if not top_ion_dict.has_key(ion):
+                            top_ion_dict[ion]=1
+                        # if we have seen it, increment the count
+                        elif top_ion_dict.has_key(ion):
+                            top_ion_dict[ion]+=1
+                        # shouldn't happen
+                        else:
+                            print "error: in function common_ion()"
+                else:
+                    empty_count += 1
+
+                    
+                    # copy the dict back to the list
+                    list_of_top_ion_dicts[index] = top_ion_dict
+
+                    if len(empty_count_list) < len(peak_list):
+                        empty_count_list.append(empty_count)
+                    else:
+                        empty_count_list[index] = empty_count
+                # increment for the next peak
+                index += 1
+                
+                
+            
+        #print "length of list of dicts", len(list_of_top_ion_dicts)
+
+        #index = 0
+        #for entry in list_of_top_ion_dicts:
+        #    for ion in sorted(entry, key=entry.get, reverse=True)[0:3]:
+        #        print ion,":", entry[ion],
+        #    print '  empty:', empty_count_list[index]
+        #    index += 1
+
+        top_ion_list = []
+
+        for entry in list_of_top_ion_dicts:
+            top_ion_list.append(max(entry, key=entry.get))
+                
+
+        return top_ion_list
+
+
+
 
     def aligned_peaks(self, minutes=False):
 

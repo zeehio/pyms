@@ -95,6 +95,7 @@ class Peak:
 
         self.__pt_bounds = None
         self.__area = None
+        self.__ion_areas = {}
 
         # TEST: to test if this speeds things up
         self.rt = self.__rt
@@ -216,6 +217,58 @@ class Peak:
             error("'area' must be a positive number")
 
         self.__area = area
+        
+    def get_ion_area(self, ion):
+        """
+        @summary: gets the area of a single ion chromatogram
+                  under the peak
+
+        @param ion: the ion who's IC is to be returned
+        @type ion: IntType
+
+        @return: The area of the ion under this peak
+        @rtype: FloatType
+        """
+        try:
+            return self.__ion_areas[ion]
+        except KeyError:
+            return None
+            
+    def get_ion_areas(self):
+        """
+        @summary: returns a copy of the ion areas dict
+
+        @return: The dictionary of ion:ion area pairs
+        @rtype: dictType
+        """
+        if len(self.__ion_areas) == 0:
+            error("no ion areas set")
+
+        return copy.deepcopy(self.__ion_areas)
+
+    
+    def set_ion_area(self, ion, area):
+        """
+        @summary: sets the area for a single ion
+
+        @param ion: the ion who's area is being entered
+        @param area: the area under the IC of ion
+
+        @author: Sean O'Callaghan
+        """
+
+        self.__ion_areas[ion] = area
+
+    def set_ion_areas(self, ion_areas):
+        """
+        @summary: set the ion:ion area pair dictionary
+
+        @param ion_areas: the dictionary of ion:ion_area pairs
+        @type ion_areas: dictType
+        """
+
+        self.__ion_areas = ion_areas
+        
 
     def set_ic_mass(self, mz):
 

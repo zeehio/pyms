@@ -23,6 +23,7 @@ Functions related to Peak modification
  #############################################################################
 
 import numpy
+import copy
 
 #from pyms.Utils.Error import error
 from pyms.Peak.Class import Peak
@@ -37,7 +38,7 @@ try:
 except:
     pass
 
-def peak_sum_area(im, peak, max_bound=0):
+def peak_sum_area(im, peak, single_ion=False, max_bound=0):
 
     """
     @Summary: Calculate the sum of the raw ion areas based on
@@ -47,6 +48,8 @@ def peak_sum_area(im, peak, max_bound=0):
     @type im: pyms.GCMS.Class.IntensityMatrix
     @param peak: The Peak object
     @type peak: pyms.Peak.Class.Peak
+    @param single_ion: whether single ion areas should be returned
+    @type singe_ion: BooleanType
     @param max_bound: Optional value to limit size of detected bound
     @type max_bound: IntType
 
@@ -54,6 +57,7 @@ def peak_sum_area(im, peak, max_bound=0):
     @rtype: FloatType
 
     @author: Andrew Isaac
+    @author: Sean O'Callaghan
     """
 
     sum_area = 0
@@ -68,14 +72,122 @@ def peak_sum_area(im, peak, max_bound=0):
     mass_ii = [ ii for ii in xrange(len(ms.mass_list)) \
         if ms.mass_spec[ii] > 0 ]
 
+    area_dict = {}
     # get stats on boundaries
     for ii in mass_ii:
         # get ion chromatogram as list
         ia = [ mat[scan][ii] for scan in xrange(len(mat)) ]
         area, left, right, l_share, r_share = ion_area(ia, apex, max_bound)
+        # need actual mass for single ion areas
+        actual_mass = ms.mass_list[ii]
+        area_dict[actual_mass] = area
         sum_area += area
 
-    return sum_area
+    if single_ion == True:
+        return sum_area, area_dict
+    else:
+        return sum_area
+
+def peak_top_ion_areas(im, peak, n_top_ions = 5, max_bound=0):
+    """
+    @summary: Calculate and return the ion areas of the five most
+    abundant ions in the peak
+
+    @param im: The originating IntensityMatrix object
+    @type im: pyms.GCMS.Class.IntensityMatrix
+    @param peak: The Peak object
+    @type peak: pyms.Peak.Class.Peak
+
+    @return: dictionary of ion:ion_area pairs
+    @rtype: dictType
+
+    @author: Sean O'Callaghan
+
+    """
+    #ms = peak.get_mass_spectrum()
+    rt = peak.get_rt()
+    apex = im.get_index_at_time(rt)
+
+    ion_areas = {} # Dictionary to store ion:ion_area pairs
+    
+
+    top_ions = top_ions_v2(peak, n_top_ions)
+    #print top_ions
+
+    for ion in top_ions:
+        ion_chrom = im.get_ic_at_mass(ion)
+        # need ia as a list not numpy array so use .tolist()
+        ia = ion_chrom.get_intensity_array().tolist()
+        area, left, right, l_share, r_share = ion_area(ia, apex, max_bound)
+        # need actual mass for single ion areas
+        ion_areas[ion] = area
+                
+
+    return ion_areas
+
+
+
+def top_ions_v1(peak, num_ions=5):
+        
+    """
+    @summary: Computes the highest 5 intensity ions
+        
+    @param peak: the peak to be processed
+    @type peak: pyms.Peak.Class.Peak
+
+    @return: a list of the top 5 highest intensity ions
+    @rtype listType
+
+    @author: Sean O'Callaghan
+    """
+
+    intensity_list = peak.get_mass_spectrum().mass_spec
+    mass_list = peak.get_mass_spectrum().mass_list
+
+    intensity_list_sorted = copy.deepcopy(intensity_list)
+    intensity_list_sorted.sort()
+
+
+    top_ions = []
+    top_intensities = intensity_list_sorted[-num_ions:]
+
+    for i in range(len(intensity_list)):
+        if intensity_list[i] in top_intensities:
+            top_ions.append(mass_list[i])
+  
+    return top_ions
+
+def top_ions_v2(peak, num_ions=5):
+    """
+    @summary: Computes the highest #num_ions intensity ions
+        
+    @param peak: the peak to be processed
+    @type peak: pyms.Peak.Class.Peak
+
+    @param num_ions: the number of ions to be recorded
+    @type: num_ions: intType
+
+    @return: a list of the #num_ions highest intensity ions
+    @rtype listType
+
+    @author: Sean O'Callaghan
+    """
+
+    intensity_list = peak.get_mass_spectrum().mass_spec
+    mass_list = peak.get_mass_spectrum().mass_list
+
+    ic_tuple = zip(intensity_list, mass_list)
+
+    sorted_ic = sorted(ic_tuple)
+    top_ic = sorted_ic[-num_ions:]
+
+    top_ions = []
+
+    for entry in top_ic:
+        top_ions.append(entry[1])
+  
+    return top_ions
+
 
 def ion_area(ia, apex, max_bound=0, tol=0.5):
 
