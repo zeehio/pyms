@@ -209,7 +209,6 @@ class Alignment(object):
         fp1.close()
         fp2.close()
 
-
     def write_common_ion_csv(self, area_file_name, top_ion_list, minutes=True):
 
         """
@@ -274,7 +273,6 @@ class Alignment(object):
                     rtsums.append(0)
                     rtcounts.append(0)
 
-                
                 if peak is not None:
                     rt = peak.get_rt()
 
@@ -286,7 +284,6 @@ class Alignment(object):
                     areas[index].append(area)
                     new_peak_lists[index].append(peak)
 
-
                     # The following code to the else statement is
                     # just for calculating the average rt
                     rtsums[index] += rt
@@ -296,7 +293,6 @@ class Alignment(object):
                     areas[index].append(None)
 
                 index += 1
-
 
         out_strings = []
         index = 0
@@ -322,7 +318,6 @@ class Alignment(object):
             
             index += 1
 
-
         # now write the file
 #        print "length of areas[0]", len(areas[0])
 #        print "lenght of areas", len(areas)
@@ -331,7 +326,6 @@ class Alignment(object):
             fp.write(row +"\n")
                 
         fp.close()
-
 
     def common_ion(self):
         """
@@ -346,8 +340,8 @@ class Alignment(object):
 
         """
 
-       # print "#peak lists =", len(self.peakpos)
-       # print "#peaks =", len(self.peakpos[0])
+        # print "#peak lists =", len(self.peakpos)
+        # print "#peaks =", len(self.peakpos[0])
         
         # a list to contain the dictionaries
         # each dictionary contains the
@@ -365,7 +359,6 @@ class Alignment(object):
                 # will only run on first peak list
                 if len(list_of_top_ion_dicts) < len(peak_list):
                     list_of_top_ion_dicts.append({})
-                    
                     
                 # copy the list entry to a local dict for code clarity
                 top_ion_dict = list_of_top_ion_dicts[index]
@@ -392,7 +385,6 @@ class Alignment(object):
                             print "error: in function common_ion()"
                 else:
                     empty_count += 1
-
                     
                     # copy the dict back to the list
                     list_of_top_ion_dicts[index] = top_ion_dict
@@ -403,9 +395,7 @@ class Alignment(object):
                         empty_count_list[index] = empty_count
                 # increment for the next peak
                 index += 1
-                
-                
-            
+
         #print "length of list of dicts", len(list_of_top_ion_dicts)
 
         #index = 0
@@ -419,12 +409,8 @@ class Alignment(object):
 
         for entry in list_of_top_ion_dicts:
             top_ion_list.append(max(entry, key=entry.get))
-                
 
         return top_ion_list
-
-
-
 
     def aligned_peaks(self, minutes=False):
 
