@@ -5,7 +5,7 @@ Classes to model GC-MS data
  #############################################################################
  #                                                                           #
  #    PyMS software for processing of metabolomic mass-spectrometry data     #
- #    Copyright (C) 2005-2010 Vladimir Likic                                 #
+ #    Copyright (C) 2005-2011 Vladimir Likic                                 #
  #                                                                           #
  #    This program is free software; you can redistribute it and/or modify   #
  #    it under the terms of the GNU General Public License version 2 as      #
