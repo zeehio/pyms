@@ -1074,7 +1074,7 @@ class IntensityMatrix(object):
             error("'mass_min' is less than the smallest mass: %.3f" %
                 self.__min_mass)
         if mass_max > self.__max_mass:
-            error("'mass_max' is greater than the smallest mass: %.3f" %
+            error("'mass_max' is greater than the largest mass: %.3f" %
                 self.__min_mass)
 
         # pre build mass_list and list of indecies
