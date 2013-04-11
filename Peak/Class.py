@@ -149,6 +149,35 @@ class Peak:
         """
 
         return self.__UID
+    
+    def get_third_highest_mz(self):
+
+        """
+        @summary: returns the mz value with the third highest
+                  intensity
+
+        @return: the ion with the third highest intensity
+        @rtype: intType
+
+        """
+
+        if self.__mass_spectrum != None:
+            mass_list = self.__mass_spectrum.mass_list
+            mass_spec = self.__mass_spectrum.mass_spec
+            # find top two masses
+            best = 0
+            best_ii = 0
+            best2_ii = 0
+            best3_ii = 0
+            for ii in range(len(mass_spec)):
+                if mass_spec[ii] > best:
+                    best = mass_spec[ii]
+                    best3_ii = best2_ii
+                    best2_ii = best_ii
+                    best_ii = ii
+
+        return int(mass_list[best3_ii])
+        
 
     def set_pt_bounds(self, pt_bounds):
 
@@ -268,7 +297,30 @@ class Peak:
         """
 
         self.__ion_areas = ion_areas
-        
+    
+    def get_int_of_ion(self, ion):
+        """
+        @summary: returns the intensity of a given ion
+
+        @param ion: the m/z value of the ion of interest
+        @type ion: intType
+
+        @return: The intensity of the given ion in this peak
+        @rtype: intType
+        """
+
+        for i,mass in enumerate(self.__mass_spectrum.mass_list):
+            if mass == ion:
+                index = i
+
+        try:
+            intensity = self.__mass_spectrum.mass_spec[index]
+        except:
+            intensity = None
+
+        return intensity  
+
+ 
 
     def set_ic_mass(self, mz):
 

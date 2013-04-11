@@ -408,9 +408,172 @@ class Alignment(object):
         top_ion_list = []
 
         for entry in list_of_top_ion_dicts:
-            top_ion_list.append(max(entry, key=entry.get))
+            top_ion_list.append(self.get_highest_mz_ion(entry))
 
         return top_ion_list
+
+    def get_highest_mz_ion(self, ion_dict):
+        """
+        @summary: Returns the preferred ion for quantitiation
+                  Looks at the list of candidate ions, selects those
+                  which have highest occurance, and selects the heaviest
+                  of those
+
+        @param ion_dict: a dictionary of mz value: number of occurances
+        @type ion_dict: dictType
+
+        @return ion: The ion to use
+        @rtype: intType
+        """
+
+
+        max_occurances = max(ion_dict.values())
+        
+        most_freq_mzs = []
+
+        for key, value in ion_dict.iteritems():
+            if value == max_occurances:
+                most_freq_mzs.append(key)
+
+        return max(most_freq_mzs)
+        
+
+
+    def write_mass_hunter_csv(self, out_file, top_ion_list):
+        """
+        @summary: Returns a csv file with ion ratios
+                  and UID
+
+        @param out_file: name of the output file
+        @type out_file: strType
+
+        @param top_ion_list: a list of the common ions for each
+                             peak in the averaged peak list for the
+                             alignment
+        @type top_ion_list: listType
+
+        @return: a csv file with UID, common and qualifying ions
+                 and their ratios for mass hunter interpretation
+        @rtype: fileType
+        """
+        try:
+            fp = open(out_file, "w")
+        except IOError:
+            error("Cannot open output file for writing")
+
+        if top_ion_list == None:
+            error("List of common ions must be supplied")
+
+        # create header
+        header = '"UID","Common Ion", "Qual Ion 1", "ratio QI1/CI", "Qual Ion 2", "ratio QI2/CI"'
+        header = header + "\n"
+
+        # write headers
+
+        fp.write(header)
+
+        rtsums = []
+        rtcounts = []
+
+        # The following two arrays will become list of lists
+        # such that:
+        # areas = [  [align1_peak1, align2_peak1, .....,alignn_peak1]
+        #            [align1_peak2, ................................]
+        #              .............................................
+        #            [align1_peakm,....................,alignn_peakm]  ]
+        areas = []
+        new_peak_lists = []
+
+        for peak_list in self.peakpos:
+            index = 0
+            for peak in peak_list:
+                # one the first iteration, populate the lists
+                if len(areas) < len(peak_list):
+                    areas.append([])
+                    new_peak_lists.append([])
+                    rtsums.append(0)
+                    rtcounts.append(0)
+
+                if peak is not None:
+                    rt = peak.get_rt()
+
+                    # get the area of the common ion for the peak
+                    # an area of 'na' shows that while the peak was
+                    # aligned, the common ion was not present
+                    area = peak.get_ion_area(top_ion_list[index])
+                     
+                    areas[index].append(area)
+                    new_peak_lists[index].append(peak)
+
+                    # The following code to the else statement is
+                    # just for calculating the average rt
+                    rtsums[index] += rt
+                    rtcounts[index] += 1
+                    
+                else:
+                    areas[index].append(None)
+
+                index += 1
+
+        out_strings = []
+        index = 0
+        # now write the strings for the file
+        for area_list in areas:
+ 
+            # write initial info:
+            # peak unique id, peak average rt
+            compo_peak = composite_peak(new_peak_lists[index], minutes=False)
+            peak_UID = compo_peak.get_UID()
+            peak_UID_string = ( '"%s"' % peak_UID)
+
+            common_ion = top_ion_list[index]
+            qual_ion_1 = int(peak_UID_string.split('-')[0].strip('"'))
+            qual_ion_2 = int(peak_UID_string.split('-')[1])
+
+            if qual_ion_1 == common_ion:
+                qual_ion_1 = compo_peak.get_third_highest_mz()
+            elif qual_ion_2 == common_ion:
+                qual_ion_2 = compo_peak.get_third_highest_mz()
+            else:
+                pass
+            
+            ci_intensity = compo_peak.get_int_of_ion(common_ion)
+            if ci_intensity == None:
+                print "No Ci for peak", index
+            q1_intensity = compo_peak.get_int_of_ion(qual_ion_1)
+            q2_intensity = compo_peak.get_int_of_ion(qual_ion_2)
+
+            try:
+                q1_ci_ratio = float(q1_intensity)/float(ci_intensity)
+            except(TypeError): # if no area available for that ion
+                q1_ci_ratio = 0.0
+            except(ZeroDivisionError): #shouldn't happen but does!!
+                q1_ci_ratio = 0.01
+            try:
+                q2_ci_ratio = float(q2_intensity)/float(ci_intensity)
+            except(TypeError):
+                q2_ci_ratio = 0.0
+            except(ZeroDivisionError): #shouldn't happen, but does!!
+                q2_ci_ratio = 0.01
+                                
+
+
+            out_strings.append(peak_UID + ',' + str(common_ion) + ',' + \
+                                   str(qual_ion_1) + \
+                                   (",%.1f" % (q1_ci_ratio*100))\
+                                   + ',' + str(qual_ion_2) + \
+                                   (",%.1f" % (q2_ci_ratio*100)))
+            index += 1
+
+        # now write the file
+#        print "length of areas[0]", len(areas[0])
+#        print "lenght of areas", len(areas)
+#        print "length of out_strings", len(out_strings)
+        for row in out_strings:
+            fp.write(row +"\n")
+                
+        fp.close()
+        
 
     def aligned_peaks(self, minutes=False):
 
