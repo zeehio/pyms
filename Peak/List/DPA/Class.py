@@ -27,6 +27,7 @@ import copy
 import numpy, Pycluster
 
 from pyms.Utils.Error import error, stop
+from pyms.Utils.IO import dump_object
 from pyms.Experiment.Class import Experiment
 from pyms.GCMS.Class import MassSpectrum
 from pyms.Peak.Class import Peak
@@ -439,7 +440,7 @@ class Alignment(object):
         
 
 
-    def write_mass_hunter_csv(self, out_file, top_ion_list):
+    def write_mass_hunter_csv(self, out_file, top_ion_list):#, peak_list_name):
         """
         @summary: Returns a csv file with ion ratios
                   and UID
@@ -465,7 +466,7 @@ class Alignment(object):
             error("List of common ions must be supplied")
 
         # create header
-        header = '"UID","Common Ion", "Qual Ion 1", "ratio QI1/CI", "Qual Ion 2", "ratio QI2/CI"'
+        header = '"UID","Common Ion", "Qual Ion 1", "ratio QI1/CI", "Qual Ion 2", "ratio QI2/CI", "l window delta", "r window delta"'
         header = header + "\n"
 
         # write headers
@@ -483,19 +484,25 @@ class Alignment(object):
         #            [align1_peakm,....................,alignn_peakm]  ]
         areas = []
         new_peak_lists = []
+        rtmax = []
+        rtmin = []
 
         for peak_list in self.peakpos:
             index = 0
             for peak in peak_list:
-                # one the first iteration, populate the lists
+                # on the first iteration, populate the lists
                 if len(areas) < len(peak_list):
                     areas.append([])
                     new_peak_lists.append([])
                     rtsums.append(0)
                     rtcounts.append(0)
+                    rtmax.append(0.0)
+                    rtmin.append(0.0)
+                    
 
                 if peak is not None:
                     rt = peak.get_rt()
+                    
 
                     # get the area of the common ion for the peak
                     # an area of 'na' shows that while the peak was
@@ -509,6 +516,17 @@ class Alignment(object):
                     # just for calculating the average rt
                     rtsums[index] += rt
                     rtcounts[index] += 1
+
+                    # quick workaround for weird problem when
+                    # attempting to set rtmin to max time above
+                    if rtmin[index] == 0.0:
+                        rtmin[index] = 5400.0
+                        
+                    if rt > rtmax[index]:
+                        rtmax[index] = rt
+                        
+                    if rt < rtmin[index]:
+                        rtmin[index] = rt
                     
                 else:
                     areas[index].append(None)
@@ -516,6 +534,7 @@ class Alignment(object):
                 index += 1
 
         out_strings = []
+        compo_peaks = []
         index = 0
         # now write the strings for the file
         for area_list in areas:
@@ -523,8 +542,14 @@ class Alignment(object):
             # write initial info:
             # peak unique id, peak average rt
             compo_peak = composite_peak(new_peak_lists[index], minutes=False)
+            compo_peaks.append(compo_peak)
             peak_UID = compo_peak.get_UID()
             peak_UID_string = ( '"%s"' % peak_UID)
+
+            #calculate the time from the leftmost peak to the average
+            l_window_delta = compo_peak.get_rt() - rtmin[index]
+            #print "l_window", l_window_delta, "rt", compo_peak.get_rt(), "rt_min", rtmin[index]
+            r_window_delta = rtmax[index] - compo_peak.get_rt()
 
             common_ion = top_ion_list[index]
             qual_ion_1 = int(peak_UID_string.split('-')[0].strip('"'))
@@ -562,7 +587,9 @@ class Alignment(object):
                                    str(qual_ion_1) + \
                                    (",%.1f" % (q1_ci_ratio*100))\
                                    + ',' + str(qual_ion_2) + \
-                                   (",%.1f" % (q2_ci_ratio*100)))
+                                   (",%.1f" % (q2_ci_ratio*100)) +
+                               (",%.2f" % ((l_window_delta+1.5)/60)) +
+                               (",%.2f" % ((r_window_delta+1.5)/60)))
             index += 1
 
         # now write the file
@@ -571,6 +598,8 @@ class Alignment(object):
 #        print "length of out_strings", len(out_strings)
         for row in out_strings:
             fp.write(row +"\n")
+
+        #dump_object(compo_peaks, peak_list_name)
                 
         fp.close()
         

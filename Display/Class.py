@@ -194,7 +194,7 @@ class Display(object):
         @type intensity_list: listType
         """
         
-        largest = [0,0,0,0,0]
+        largest = [0,0,0,0,0,0,0,0,0,0]
         
         # Find out largest value
         for i in range(len(intensity_list)):
@@ -202,7 +202,7 @@ class Display(object):
                 largest[0] = i
         
         # Now find next four largest values
-        for j in [1,2,3,4]:
+        for j in [1,2,3,4,5,6,7,8,9]:
             for i in range(len(intensity_list)):
                 if intensity_list[i] > intensity_list[largest[j]] and \
                     intensity_list[i] < intensity_list[largest[j-1]]:
@@ -282,7 +282,7 @@ class Display(object):
         
         if len(intensity_list) != 0:
             print "mass\t intensity"
-            for i in range(5):
+            for i in range(10):
                 print mass_list[largest[i]], "\t", intensity_list[largest[i]]
         else:    # if the selected point is not close enough to peak
             print "No Peak at this point"

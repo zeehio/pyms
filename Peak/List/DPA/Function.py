@@ -335,7 +335,12 @@ def position_similarity(pos1, pos2, D):
                         bspec = b.mass_spec
                         mass_spect2 = numpy.array(bspec, dtype='d')
                         mass_spect2_sum = numpy.sum(mass_spect2**2, axis=0)
-                        top = numpy.dot(mass_spect1, mass_spect2)
+                        try:
+                            top = numpy.dot(mass_spect1, mass_spect2)
+                        except(ValueError):
+                            error("Mass Spectra are of different length\n\n" +  
+                                 " Use IntensityMatrix.crop_mass() to set\n" 
+                                  + " same length for all Mass Spectra""")
                         bot = numpy.sqrt(mass_spect1_sum*mass_spect2_sum)
                         if bot > 0:
                             cos = top/bot

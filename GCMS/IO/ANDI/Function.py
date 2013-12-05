@@ -99,7 +99,7 @@ def ANDI_reader(file_name):
 
     # sanity check
     if not len(time_list) == len(scan_list):
-        error("number of time points does not equal the number of scans")
+        error("number of time points (%d) does not equal the number of scans (%d)"%(len(time_list), len(scan_list)))
 
     data = GCMS_data(time_list, scan_list)
 
