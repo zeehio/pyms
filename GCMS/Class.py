@@ -847,6 +847,7 @@ class IntensityMatrix(object):
             return self.get_tic()
 
         if mass < self.__min_mass or mass > self.__max_mass:
+            print "min mass: ", self.__min_mass, "max mass:", self.__max_mass
             error("mass is out of range")
 
         ix = self.get_index_of_mass(mass)
@@ -1075,7 +1076,7 @@ class IntensityMatrix(object):
                 self.__min_mass)
         if mass_max > self.__max_mass:
             error("'mass_max' is greater than the largest mass: %.3f" %
-                self.__min_mass)
+                self.__max_mass)
 
         # pre build mass_list and list of indecies
         mass_list = self.__mass_list

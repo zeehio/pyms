@@ -34,6 +34,7 @@ from pyms.Peak.Class import Peak
 from pyms.Peak.List.Function import composite_peak
 
 import Function
+import Function_new
 
 # If psyco is installed, use it to speed up running time
 try:
@@ -694,7 +695,7 @@ class PairwiseAlignment(object):
 
         for i in range(n - 1):
             for j in range(i + 1, n):
-                ma = Function.align(algts[i], algts[j], D, gap)
+                ma = Function_new.align(algts[i], algts[j], D, gap)
                 sim_matrix[i,j] = sim_matrix[j,i] = ma.similarity
                 total_n = total_n - 1
                 print " -> %d pairs remaining" % total_n

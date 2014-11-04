@@ -206,6 +206,7 @@ def get_maxima_indices(ion_intensities, points=3):
     # a peak
     peak_point = []
     edge = -1
+    points = int(points)
     half = int(points/2)
     points = 2*half+1  # ensure odd number of points
     for index in range(len(ion_intensities)-points+1):
@@ -251,6 +252,40 @@ def get_maxima_list(ic, points=3):
         intens = ic.get_intensity_at_index(peak_point[index])
         mlist.append([rt, intens])
     return mlist
+
+def get_maxima_list_reduced(ic, mp_rt, points=13, window=3):
+
+    """
+    @summary: List of retention time and intensity of local maxima for ion
+              Only peaks around a specific retention time are recorded
+              created for use with gap filling algorithm
+    @param ic: An IonChromatogram object
+    @type ic: pyms.GCMS.Class.IonChromatogram
+    @param mp_rt: The retention time of the missing peak
+    @type ic: floatType
+    @param points: Peak if maxima over 'points' number of scans
+    @type points: IntType
+    @param window: The window around the mp_rt where peaks should
+                   be recorded
+    @type window: intType
+
+    @return: A list of retention time and intensity of local maxima for ion
+    @rtype: ListType
+
+    @author: Andrew Isaac
+    """
+
+    peak_point = get_maxima_indices(ic.get_intensity_array(), points)
+    mlist = []
+    for index in range(len(peak_point)):
+        rt = ic.get_time_at_index(peak_point[index])
+        if (rt > float(mp_rt) - window) and (rt < float(mp_rt) + window):
+            intens = ic.get_intensity_at_index(peak_point[index])
+            mlist.append([rt, intens])
+        else:
+            pass
+    return mlist
+
 
 def get_maxima_matrix(im, points=3, scans=1):
 

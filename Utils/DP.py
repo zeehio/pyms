@@ -23,6 +23,7 @@ Dynamic Programming routine
  #############################################################################
 
 import numpy
+#from mpi4py import MPI
 
 def dp(S, gap_penalty):
     
@@ -40,6 +41,9 @@ def dp(S, gap_penalty):
 
     @author: Tim Erwin
     """
+    #comm = MPI.COMM_WORLD
+    #rank = comm.Get_rank()
+    #print " In DP.py, I am rank", rank
     
     row_length = len(S[:,0])
     col_length = len(S[0,:])
