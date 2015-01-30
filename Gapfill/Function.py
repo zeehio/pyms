@@ -11,6 +11,7 @@ import sys, os, errno, string, numpy
 sys.path.append("/x/PyMS")
 
 from pyms.GCMS.IO.ANDI.Function import ANDI_reader
+from pyms.GCMS.IO.MZML.Function import mzML_reader
 from pyms.GCMS.Function import build_intensity_matrix_i
 from pyms.Noise.SavitzkyGolay import savitzky_golay
 from pyms.Baseline.TopHat import tophat
@@ -98,8 +99,8 @@ def mp_finder(inputmatrix):
     return sample_list
 
 
-def missing_peak_finder(sample, andi_file, points=13, null_ions=[73, 147],\
-                            crop_ions=[50,540], threshold=1000, rt_window=1):
+def missing_peak_finder(sample, filename, points=13, null_ions=[73, 147],\
+                            crop_ions=[50,540], threshold=1000, rt_window=1, filetype='cdf'):
     """
     @summary: Integrates raw data around missing peak locations
               to fill in NAs in the data matrix
@@ -134,10 +135,14 @@ def missing_peak_finder(sample, andi_file, points=13, null_ions=[73, 147],\
     ### some error checks on null and crop ions
 
     ### a for root,files,dirs in os.path.walk(): loop
-    print "Sample:", sample.get_name(), "andi_file:", andi_file
-
-    data = ANDI_reader(andi_file)
-
+    print "Sample:", sample.get_name(), "File:", filename
+    
+    if filetype == 'cdf':
+        data = ANDI_reader(filename)
+    elif filetype == 'mzml':
+        data = mzML_reader(filename)
+    else:
+        print "file type not valid"
     
 
     # build integer intensity matrix
